@@ -1,24 +1,44 @@
-import './style.css'
-import javascriptLogo from './javascript.svg'
-import viteLogo from '/vite.svg'
-import { setupCounter } from './counter.js'
+import './style.css';
+import { Header } from './components/Header.js';
+import { ImageStudio } from './components/ImageStudio.js';
 
-document.querySelector('#app').innerHTML = `
-  <div>
-    <a href="https://vite.dev" target="_blank">
-      <img src="${viteLogo}" class="logo" alt="Vite logo" />
-    </a>
-    <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript" target="_blank">
-      <img src="${javascriptLogo}" class="logo vanilla" alt="JavaScript logo" />
-    </a>
-    <h1>Hello Vite!</h1>
-    <div class="card">
-      <button id="counter" type="button"></button>
-    </div>
-    <p class="read-the-docs">
-      Click on the Vite logo to learn more
-    </p>
-  </div>
-`
+const app = document.querySelector('#app');
+let contentArea; // Declare contentArea globally so navigate can access it
 
-setupCounter(document.querySelector('#counter'))
+app.innerHTML = '';
+app.appendChild(Header());
+
+contentArea = document.createElement('main'); // Assign to global contentArea
+contentArea.id = 'content-area';
+contentArea.className = 'flex-1 relative w-full overflow-hidden flex flex-col bg-app-bg';
+app.appendChild(contentArea);
+
+// Initial Route
+navigate('image');
+
+// Router
+function navigate(page) {
+  contentArea.innerHTML = '';
+
+  if (page === 'image') {
+    contentArea.appendChild(ImageStudio());
+  } else if (page === 'video') {
+    contentArea.innerHTML = '<div class="flex items-center justify-center h-full text-secondary">Video Studio Coming Soon 🎬</div>';
+  } else if (page === 'cinema') {
+    contentArea.innerHTML = '<div class="flex items-center justify-center h-full text-secondary">Cinema Studio Coming Soon 🎥</div>';
+  }
+}
+
+// Initial Load
+navigate('image');
+
+// Event Listener for Navigation
+window.addEventListener('navigate', (e) => {
+  if (e.detail.page === 'settings') {
+    import('./components/SettingsModal.js').then(({ SettingsModal }) => {
+      document.body.appendChild(SettingsModal());
+    });
+  } else {
+    navigate(e.detail.page);
+  }
+});
