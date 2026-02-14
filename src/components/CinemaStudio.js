@@ -440,7 +440,7 @@ export function CinemaStudio() {
                 model: 'nano-banana-pro',
                 prompt: finalPrompt,
                 aspect_ratio: currentSettings.aspect_ratio,
-                resolution: resBtn.dataset.value || '1k',
+                resolution: (resBtn.dataset.value || '1k').toLowerCase(),
                 negative_prompt: "blurry, low quality, distortion, bad composition"
             });
 
