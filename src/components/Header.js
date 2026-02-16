@@ -52,6 +52,15 @@ export function Header(navigate) {
             if (item === 'Image') navigate('image');
             else if (item === 'Video') navigate('video');
             else if (item === 'Cinema Studio') navigate('cinema');
+            else if (item === 'Explore') navigate('explore');
+            else if (item === 'Character') navigate('character');
+            else if (item === 'Edit') navigate('edit');
+            else if (item === 'Vibe Motion') navigate('vibemotion');
+            else if (item === 'Contests') navigate('contests');
+            else if (item === 'AI Influencer') navigate('ai-influencer');
+            else if (item === 'Apps') navigate('apps');
+            else if (item === 'Assist') navigate('assist');
+            else if (item === 'Community') navigate('community');
         };
 
         menu.appendChild(link);

@@ -2008,7 +2008,76 @@ export const t2iModels = [
   }
 ];
 
-export const getModelById = (id) => t2iModels.find(m => m.id === id);
+export const videoModels = [
+  {
+    "id": "veo3-video",
+    "name": "Veo 3 Video",
+    "endpoint": "veo3-text-to-video",
+    "inputs": {
+      "prompt": {
+        "description": "Text prompt describing the video.",
+        "type": "string",
+        "title": "Prompt",
+        "name": "prompt"
+      },
+      "aspect_ratio": {
+        "enum": ["16:9", "9:16", "1:1", "21:9"],
+        "title": "Aspect Ratio",
+        "name": "aspect_ratio",
+        "type": "string",
+        "default": "16:9"
+      }
+    }
+  },
+  {
+    "id": "veo3-image-to-video",
+    "name": "Veo 3 Image-to-Video",
+    "endpoint": "veo3-image-to-video",
+    "inputs": {
+      "prompt": {
+        "description": "Text prompt describing the video.",
+        "type": "string",
+        "title": "Prompt",
+        "name": "prompt"
+      },
+      "image_url": {
+        "description": "The input image to animate.",
+        "type": "string",
+        "title": "Image",
+        "name": "image_url"
+      },
+      "aspect_ratio": {
+        "enum": ["16:9", "9:16", "1:1", "21:9"],
+        "title": "Aspect Ratio",
+        "name": "aspect_ratio",
+        "type": "string",
+        "default": "16:9"
+      }
+    }
+  },
+  {
+    "id": "wan-2.1-video",
+    "name": "WAN 2.1 Video",
+    "endpoint": "wan2.1-text-to-video",
+    "inputs": {
+      "prompt": {
+        "description": "Text prompt describing the video.",
+        "type": "string",
+        "title": "Prompt",
+        "name": "prompt"
+      },
+      "aspect_ratio": {
+        "enum": ["16:9", "9:16", "1:1"],
+        "title": "Aspect Ratio",
+        "name": "aspect_ratio",
+        "type": "string",
+        "default": "16:9"
+      }
+    }
+  }
+];
+
+export const getModelById = (id) => [...t2iModels, ...videoModels].find(m => m.id === id);
 
 export const getAspectRatiosForModel = (modelId) => {
   const model = getModelById(modelId);

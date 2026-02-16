@@ -106,6 +106,70 @@ export class MuapiClient {
     }
 
     /**
+     * Generates a video (Text-to-Video or Image-to-Video)
+     * @param {Object} params
+     * @param {string} params.model
+     * @param {string} params.prompt
+     * @param {string} params.aspect_ratio
+     * @param {string} [params.image_url] - If present, treats as Image-to-Video
+     */
+    async generateVideo(params) {
+        const key = this.getKey();
+
+        // Resolve endpoint from model definition
+        const modelInfo = getModelById(params.model);
+        const endpoint = modelInfo?.endpoint || params.model;
+        const url = `${this.baseUrl}/api/v1/${endpoint}`;
+
+        // Build payload
+        const finalPayload = {
+            prompt: params.prompt,
+            aspect_ratio: params.aspect_ratio || '16:9'
+        };
+
+        if (params.image_url) {
+            finalPayload.image_url = params.image_url;
+        }
+
+        console.log('[Muapi] Requesting Video:', url);
+        console.log('[Muapi] Video Payload:', finalPayload);
+
+        try {
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-api-key': key
+                },
+                body: JSON.stringify(finalPayload)
+            });
+
+            if (!response.ok) {
+                const errText = await response.text();
+                throw new Error(`Video API Request Failed: ${response.status} ${response.statusText} - ${errText.slice(0, 100)}`);
+            }
+
+            const submitData = await response.json();
+            const requestId = submitData.request_id || submitData.id;
+
+            if (!requestId) return submitData;
+
+            console.log('[Muapi] Polling for video, request_id:', requestId);
+            // Videos take longer, so we increase maxAttempts
+            const result = await this.pollForResult(requestId, key, 150, 2000);
+
+            // Normalize: extract video URL
+            const videoUrl = result.outputs?.[0] || result.url || result.output?.url;
+            console.log('[Muapi] Video URL:', videoUrl);
+            return { ...result, url: videoUrl };
+
+        } catch (error) {
+            console.error("Muapi Video Error:", error);
+            throw error;
+        }
+    }
+
+    /**
      * Polls the predictions endpoint until the result is ready.
      * @param {string} requestId - The request ID from the submit response
      * @param {string} key - The API key
@@ -158,6 +222,178 @@ export class MuapiClient {
         }
 
         throw new Error('Generation timed out after polling.');
+    }
+
+    /**
+     * Generates ambient audio from a text prompt (mmaudio-v2-text-to-audio)
+     * @param {Object} params
+     * @param {string} params.prompt - e.g. "Forest wind with distant thunder"
+     * @param {number} [params.duration] - Duration in seconds (default 8)
+     */
+    async generateAudio(params) {
+        const key = this.getKey();
+        const url = `${this.baseUrl}/api/v1/mmaudio-v2-text-to-audio`;
+
+        const payload = {
+            prompt: params.prompt,
+            duration: params.duration || 8
+        };
+
+        console.log('[Muapi] Requesting Audio:', payload);
+
+        try {
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'x-api-key': key },
+                body: JSON.stringify(payload)
+            });
+
+            if (!response.ok) {
+                const errText = await response.text();
+                throw new Error(`Audio API Failed: ${response.status} - ${errText.slice(0, 100)}`);
+            }
+
+            const submitData = await response.json();
+            const requestId = submitData.request_id || submitData.id;
+            if (!requestId) return submitData;
+
+            const result = await this.pollForResult(requestId, key, 90, 2000);
+            const audioUrl = result.outputs?.[0] || result.url || result.output?.url;
+            console.log('[Muapi] Audio URL:', audioUrl);
+            return { ...result, url: audioUrl };
+        } catch (error) {
+            console.error('Muapi Audio Error:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * Generates speech from text (minimax-speech-2.6-hd)
+     * @param {Object} params
+     * @param {string} params.text - The dialogue text
+     * @param {string} [params.voice] - Voice style/ID
+     */
+    async generateSpeech(params) {
+        const key = this.getKey();
+        const url = `${this.baseUrl}/api/v1/minimax-speech-2.6-hd`;
+
+        const payload = {
+            text: params.text,
+            voice: params.voice || 'default'
+        };
+
+        console.log('[Muapi] Requesting Speech:', payload);
+
+        try {
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'x-api-key': key },
+                body: JSON.stringify(payload)
+            });
+
+            if (!response.ok) {
+                const errText = await response.text();
+                throw new Error(`Speech API Failed: ${response.status} - ${errText.slice(0, 100)}`);
+            }
+
+            const submitData = await response.json();
+            const requestId = submitData.request_id || submitData.id;
+            if (!requestId) return submitData;
+
+            const result = await this.pollForResult(requestId, key, 60, 2000);
+            const speechUrl = result.outputs?.[0] || result.url || result.output?.url;
+            console.log('[Muapi] Speech URL:', speechUrl);
+            return { ...result, url: speechUrl };
+        } catch (error) {
+            console.error('Muapi Speech Error:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * Generates music from a text prompt (suno-create-music)
+     * @param {Object} params
+     * @param {string} params.prompt - e.g. "Epic cinematic orchestral score"
+     * @param {number} [params.duration] - Duration in seconds
+     */
+    async generateMusic(params) {
+        const key = this.getKey();
+        const url = `${this.baseUrl}/api/v1/suno-create-music`;
+
+        const payload = {
+            prompt: params.prompt,
+            duration: params.duration || 15
+        };
+
+        console.log('[Muapi] Requesting Music:', payload);
+
+        try {
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'x-api-key': key },
+                body: JSON.stringify(payload)
+            });
+
+            if (!response.ok) {
+                const errText = await response.text();
+                throw new Error(`Music API Failed: ${response.status} - ${errText.slice(0, 100)}`);
+            }
+
+            const submitData = await response.json();
+            const requestId = submitData.request_id || submitData.id;
+            if (!requestId) return submitData;
+
+            const result = await this.pollForResult(requestId, key, 120, 3000);
+            const musicUrl = result.outputs?.[0] || result.url || result.output?.url;
+            console.log('[Muapi] Music URL:', musicUrl);
+            return { ...result, url: musicUrl };
+        } catch (error) {
+            console.error('Muapi Music Error:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * Lip-syncs a video to an audio file (sync-lipsync)
+     * @param {Object} params
+     * @param {string} params.video_url - URL of the video to lip-sync
+     * @param {string} params.audio_url - URL of the audio to sync to
+     */
+    async lipSync(params) {
+        const key = this.getKey();
+        const url = `${this.baseUrl}/api/v1/sync-lipsync`;
+
+        const payload = {
+            video_url: params.video_url,
+            audio_url: params.audio_url
+        };
+
+        console.log('[Muapi] Requesting Lip-Sync:', payload);
+
+        try {
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'x-api-key': key },
+                body: JSON.stringify(payload)
+            });
+
+            if (!response.ok) {
+                const errText = await response.text();
+                throw new Error(`Lip-Sync API Failed: ${response.status} - ${errText.slice(0, 100)}`);
+            }
+
+            const submitData = await response.json();
+            const requestId = submitData.request_id || submitData.id;
+            if (!requestId) return submitData;
+
+            const result = await this.pollForResult(requestId, key, 150, 2000);
+            const syncedUrl = result.outputs?.[0] || result.url || result.output?.url;
+            console.log('[Muapi] Lip-Synced Video URL:', syncedUrl);
+            return { ...result, url: syncedUrl };
+        } catch (error) {
+            console.error('Muapi Lip-Sync Error:', error);
+            throw error;
+        }
     }
 
     getDimensionsFromAR(ar) {

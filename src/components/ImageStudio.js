@@ -571,5 +571,33 @@ export function ImageStudio() {
         }
     };
 
+    // ==========================================
+    // REMIX LOGIC (From Global State/Storage)
+    // ==========================================
+    setTimeout(() => {
+        const remixData = localStorage.getItem('remixData');
+        if (remixData) {
+            try {
+                const data = JSON.parse(remixData);
+                console.log('Remixing Image:', data);
+                // Only consume if it's explicitly for image, OR if it's generic (Explore items)
+                // Explore items have 'type' property.
+                if (data.type && data.type !== 'image') {
+                    // If it's video data but we are in ImageStudio, maybe user navigated manually?
+                    // But remix button logic handles target page.
+                    // So we assume if we are here, it's meant for us.
+                }
+
+                if (data.prompt) {
+                    textarea.value = data.prompt;
+                    textarea.dispatchEvent(new Event('input'));
+                }
+                localStorage.removeItem('remixData');
+            } catch (e) {
+                console.error('Error parsing remix data', e);
+            }
+        }
+    }, 100);
+
     return container;
 }
