@@ -39,7 +39,7 @@ export function Header(navigate) {
             link.appendChild(dot);
         }
 
-        if (item === 'Contests') {
+        if (item === 'Contests' || item === 'Popcorn 🍿') {
             link.innerHTML += ' <span class="bg-primary/10 text-primary text-[8px] px-1.5 py-0.5 rounded-full ml-1 border border-primary/20">New</span>';
         }
 

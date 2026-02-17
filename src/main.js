@@ -41,10 +41,13 @@ function navigate(page, context) {
     import('./components/PopcornStudio.js').then(({ PopcornStudio }) => {
       contentArea.appendChild(PopcornStudio());
     });
+  } else if (page === 'explore') {
+    import('./components/Explore.js').then(({ Explore }) => {
+      contentArea.appendChild(Explore());
+    });
   } else {
     // Coming Soon / Fallback pages
     const titles = {
-      'explore': 'Explore',
       'contests': 'Contests',
       'ai-influencer': 'AI Influencer',
       'apps': 'Apps',

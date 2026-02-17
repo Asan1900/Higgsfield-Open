@@ -65,7 +65,7 @@ export function VibeMotion() {
     arrow.className = 'text-white/20 rotate-90 md:rotate-0 flex flex-col items-center justify-center gap-2 shrink-0';
     arrow.innerHTML = `
         <span class="text-[10px] font-bold uppercase tracking-widest hidden md:block">Process</span>
-        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        <svg class="animate-pulse text-primary/50" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
     `;
 
     // Target/Output Card

@@ -295,11 +295,19 @@ export function PopcornStudio() {
             }
         } catch (e) {
             console.error(e);
-            alert('Something went wrong during filming!');
+            generateBtn.innerHTML = `<span class="text-red-400">Error: Failed to film</span>`;
         } finally {
+            if (!generateBtn.innerHTML.includes('Error')) {
+                generateBtn.textContent = 'Action! 🎬';
+            } else {
+                setTimeout(() => {
+                    generateBtn.disabled = false;
+                    generateBtn.textContent = 'Action! 🎬';
+                }, 3000);
+                return; // early return to skip immediate enable
+            }
             isGenerating = false;
             generateBtn.disabled = false;
-            generateBtn.textContent = 'Action! 🎬';
         }
     };
 
