@@ -37,6 +37,10 @@ function navigate(page, context) {
     import('./components/VibeMotion.js').then(({ VibeMotion }) => {
       contentArea.appendChild(VibeMotion());
     });
+  } else if (page === 'popcorn') {
+    import('./components/PopcornStudio.js').then(({ PopcornStudio }) => {
+      contentArea.appendChild(PopcornStudio());
+    });
   } else {
     // Coming Soon / Fallback pages
     const titles = {

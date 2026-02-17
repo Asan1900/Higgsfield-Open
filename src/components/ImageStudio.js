@@ -72,7 +72,7 @@ export function ImageStudio() {
     promptWrapper.style.animationDelay = '0.2s';
 
     const bar = document.createElement('div');
-    bar.className = 'w-full bg-[#111]/90 backdrop-blur-xl border border-white/10 rounded-[1.5rem] md:rounded-[2.5rem] p-3 md:p-5 flex flex-col gap-3 md:gap-5 shadow-3xl';
+    bar.className = 'w-full bg-[#111]/90 backdrop-blur-xl border border-white/10 rounded-[1.5rem] md:rounded-[2.5rem] p-3 md:p-5 flex flex-col gap-3 md:gap-5 shadow-3xl transition-all duration-300';
 
     // Top Row: Input
     const topRow = document.createElement('div');
