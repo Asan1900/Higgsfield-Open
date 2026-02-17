@@ -35,7 +35,7 @@ export function Header(navigate) {
         // Active Indicator or Dot
         if (item === 'Image') {
             const dot = document.createElement('div');
-            dot.className = 'absolute -bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 bg-primary rounded-full';
+            dot.className = 'active-dot absolute -bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 bg-primary rounded-full';
             link.appendChild(dot);
         }
 
@@ -45,22 +45,35 @@ export function Header(navigate) {
 
         link.onclick = () => {
             // Remove active state from all
-            Array.from(menu.children).forEach(child => child.classList.remove('text-white'));
+            Array.from(menu.children).forEach(child => {
+                child.classList.remove('text-white');
+                const existingDot = child.querySelector('.active-dot');
+                if (existingDot) existingDot.remove();
+            });
+
             // Add to current
             link.classList.add('text-white');
+            const dot = document.createElement('div');
+            dot.className = 'active-dot absolute -bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 bg-primary rounded-full';
+            link.appendChild(dot);
 
-            if (item === 'Image') navigate('image');
-            else if (item === 'Video') navigate('video');
-            else if (item === 'Cinema Studio') navigate('cinema');
-            else if (item === 'Explore') navigate('explore');
-            else if (item === 'Character') navigate('character');
-            else if (item === 'Edit') navigate('edit');
-            else if (item === 'Vibe Motion') navigate('vibemotion');
-            else if (item === 'Contests') navigate('contests');
-            else if (item === 'AI Influencer') navigate('ai-influencer');
-            else if (item === 'Apps') navigate('apps');
-            else if (item === 'Assist') navigate('assist');
-            else if (item === 'Community') navigate('community');
+            const routes = {
+                'Image': 'image',
+                'Video': 'video',
+                'Cinema Studio': 'cinema',
+                'Explore': 'explore',
+                'Character': 'character',
+                'Edit': 'edit',
+                'Vibe Motion': 'vibemotion',
+                'Contests': 'contests',
+                'AI Influencer': 'ai-influencer',
+                'Apps': 'apps',
+                'Assist': 'assist',
+                'Community': 'community'
+            };
+
+            const route = routes[item];
+            if (route) navigate(route);
         };
 
         menu.appendChild(link);
