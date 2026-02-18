@@ -1,6 +1,7 @@
 import { muapi } from '../lib/muapi.js';
 import { t2iModels, getAspectRatiosForModel } from '../lib/models.js';
 import { AuthModal } from './AuthModal.js';
+import { toast } from '../lib/Toast.js';
 
 export function ImageStudio() {
     const container = document.createElement('div');
@@ -78,8 +79,6 @@ export function ImageStudio() {
     const topRow = document.createElement('div');
     topRow.className = 'flex items-start gap-5 px-2';
 
-    topRow.innerHTML = ``;
-
     const textarea = document.createElement('textarea');
     textarea.placeholder = 'Describe the scene you imagine';
     textarea.className = 'flex-1 bg-transparent border-none text-white text-base md:text-xl placeholder:text-muted focus:outline-none resize-none pt-2.5 leading-relaxed min-h-[40px] max-h-[150px] md:max-h-[250px] overflow-y-auto custom-scrollbar';
@@ -130,7 +129,7 @@ export function ImageStudio() {
     controlsLeft.appendChild(arBtn);
     controlsLeft.appendChild(qualityBtn);
 
-    // Initial Resolution Visibility (only show for models with explicit resolution/megapixels enums)
+    // Initial Resolution Visibility
     const initialModel = t2iModels[0];
     const hasInitialRes = initialModel?.inputs?.resolution?.enum || initialModel?.inputs?.megapixels?.enum;
     qualityBtn.style.display = hasInitialRes ? 'flex' : 'none';
@@ -162,7 +161,6 @@ export function ImageStudio() {
     const dropdown = document.createElement('div');
     dropdown.className = 'absolute bottom-[102%] left-2 z-50 transition-all opacity-0 pointer-events-none scale-95 origin-bottom-left glass rounded-3xl p-3 translate-y-2 w-[calc(100vw-3rem)] max-w-xs shadow-4xl border border-white/10 flex flex-col';
 
-    // Toggle Logic
     const toggleDropdown = (type, btn) => {
         if (dropdownOpen === type) {
             closeDropdown();
@@ -170,7 +168,6 @@ export function ImageStudio() {
             dropdownOpen = type;
             renderDropdownContent(type);
 
-            // Position
             const btnRect = btn.getBoundingClientRect();
             const containerRect = container.getBoundingClientRect();
 
@@ -260,7 +257,7 @@ export function ImageStudio() {
                         </div>
                         <span class="text-xs font-bold text-white opacity-80 group-hover:opacity-100 transition-opacity">${r}</span>
                     </div>
-                     ${selectedAr === r ? '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#d9ff00" stroke-width="4"><polyline points="20 6 9 17 4 12"/></svg>' : ''}
+                    ${selectedAr === r ? '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#d9ff00" stroke-width="4"><polyline points="20 6 9 17 4 12"/></svg>' : ''}
                 `;
                 el.onclick = (e) => {
                     e.stopPropagation();
@@ -283,7 +280,7 @@ export function ImageStudio() {
                 el.className = 'flex items-center justify-between p-3.5 hover:bg-white/5 rounded-2xl cursor-pointer transition-all group';
                 el.innerHTML = `
                     <span class="text-xs font-bold text-white opacity-80 group-hover:opacity-100">${opt}</span>
-                     ${document.getElementById('quality-btn-label').textContent === opt ? '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#d9ff00" stroke-width="4"><polyline points="20 6 9 17 4 12"/></svg>' : ''}
+                    ${document.getElementById('quality-btn-label').textContent === opt ? '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#d9ff00" stroke-width="4"><polyline points="20 6 9 17 4 12"/></svg>' : ''}
                 `;
                 el.onclick = (e) => {
                     e.stopPropagation();
@@ -296,18 +293,15 @@ export function ImageStudio() {
         }
     };
 
-    // Helper to handle model selection logic
     const selectModel = (m) => {
         selectedModel = m.id;
         selectedModelName = m.name;
         document.getElementById('model-btn-label').textContent = selectedModelName;
 
-        // Reset AR
         const availableArs = getAspectRatiosForModel(selectedModel);
         selectedAr = availableArs[0];
         document.getElementById('ar-btn-label').textContent = selectedAr;
 
-        // Quality visibility
         const hasQuality = m.inputs?.resolution?.enum || m.inputs?.megapixels?.enum;
         qualityBtn.style.display = hasQuality ? 'flex' : 'none';
 
@@ -332,13 +326,12 @@ export function ImageStudio() {
     // ==========================================
     const generationHistory = [];
 
-    // History sidebar
     const historySidebar = document.createElement('div');
-    historySidebar.className = 'fixed right-0 top-0 h-full w-20 md:w-24 bg-black/60 backdrop-blur-xl border-l border-white/5 z-50 flex flex-col items-center py-4 gap-3 overflow-y-auto transition-all duration-500 translate-x-full opacity-0';
+    historySidebar.className = 'fixed right-0 top-0 h-full w-20 md:w-24 bg-black/60 backdrop-blur-xl border-l border-white/5 z-50 flex flex-col items-center py-4 gap-3 overflow-y-auto custom-scrollbar transition-all duration-500 translate-x-full opacity-0';
     historySidebar.id = 'history-sidebar';
 
     const historyLabel = document.createElement('div');
-    historyLabel.className = 'text-[9px] font-bold text-muted uppercase tracking-widest mb-2 rotate-0';
+    historyLabel.className = 'text-[9px] font-bold text-muted uppercase tracking-widest mb-2';
     historyLabel.textContent = 'History';
     historySidebar.appendChild(historyLabel);
 
@@ -348,7 +341,6 @@ export function ImageStudio() {
 
     container.appendChild(historySidebar);
 
-    // Main canvas
     const canvas = document.createElement('div');
     canvas.className = 'absolute inset-0 flex flex-col items-center justify-center p-4 min-[800px]:p-16 z-10 opacity-0 pointer-events-none transition-all duration-1000 translate-y-10 scale-95';
 
@@ -359,7 +351,6 @@ export function ImageStudio() {
     resultImg.className = 'max-h-[60vh] max-w-[80vw] rounded-3xl shadow-3xl border border-white/10 interactive-glow object-contain';
     imageContainer.appendChild(resultImg);
 
-    // Canvas Controls
     const canvasControls = document.createElement('div');
     canvasControls.className = 'mt-6 flex gap-3 opacity-0 transition-opacity delay-500 duration-500 justify-center';
 
@@ -383,9 +374,7 @@ export function ImageStudio() {
     canvas.appendChild(canvasControls);
     container.appendChild(canvas);
 
-    // --- Helper: Show image in canvas ---
     const showImageInCanvas = (imageUrl) => {
-        // Fully hide hero and prompt
         hero.classList.add('hidden');
         promptWrapper.classList.add('hidden');
 
@@ -398,14 +387,10 @@ export function ImageStudio() {
         };
     };
 
-    // --- Helper: Add to history ---
     const addToHistory = (entry) => {
         generationHistory.unshift(entry);
-
-        // Save to localStorage
         localStorage.setItem('muapi_history', JSON.stringify(generationHistory.slice(0, 50)));
 
-        // Show sidebar
         historySidebar.classList.remove('translate-x-full', 'opacity-0');
         historySidebar.classList.add('translate-x-0', 'opacity-100');
 
@@ -420,7 +405,15 @@ export function ImageStudio() {
 
             thumb.innerHTML = `
                 <img src="${entry.url}" alt="${entry.prompt?.substring(0, 30) || 'Generated'}" class="w-full aspect-square object-cover">
-                <div class="absolute inset-0 bg-black/60 opacity-0 group-hover/thumb:opacity-100 transition-opacity flex items-center justify-center gap-1">
+                <div class="absolute inset-0 bg-black/60 opacity-0 group-hover/thumb:opacity-100 transition-opacity flex flex-col items-center justify-center gap-2">
+                    <div class="flex gap-1">
+                        <button class="hist-copy p-1.5 bg-white/10 rounded-lg text-white hover:bg-white/20 transition-all" title="Copy Prompt">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+                        </button>
+                        <button class="hist-remix p-1.5 bg-white/10 rounded-lg text-white hover:bg-white/20 transition-all" title="Remix">
+                         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 2v6h-6"/><path d="M3 12a9 9 0 0 1 15-6.7L21 8"/><path d="M3 22v-6h6"/><path d="M21 12a9 9 0 0 1-15 6.7L3 16"/></svg>
+                        </button>
+                    </div>
                     <button class="hist-download p-1.5 bg-primary rounded-lg text-black hover:scale-110 transition-transform" title="Download">
                         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
                     </button>
@@ -432,8 +425,19 @@ export function ImageStudio() {
                     downloadImage(entry.url, `muapi-${entry.id || idx}.jpg`);
                     return;
                 }
+                if (e.target.closest('.hist-copy')) {
+                    navigator.clipboard.writeText(entry.prompt);
+                    toast.success('Prompt copied to clipboard');
+                    return;
+                }
+                if (e.target.closest('.hist-remix')) {
+                    textarea.value = entry.prompt;
+                    textarea.focus();
+                    textarea.dispatchEvent(new Event('input'));
+                    toast.info('Prompt loaded for remix');
+                    return;
+                }
                 showImageInCanvas(entry.url);
-                // Update active border
                 historyList.querySelectorAll('div').forEach(t => {
                     t.classList.remove('border-primary', 'shadow-glow');
                     t.classList.add('border-white/10');
@@ -446,9 +450,9 @@ export function ImageStudio() {
         });
     };
 
-    // --- Helper: Download image ---
     const downloadImage = async (url, filename) => {
         try {
+            toast.info('Starting download...');
             const response = await fetch(url);
             const blob = await response.blob();
             const blobUrl = URL.createObjectURL(blob);
@@ -459,13 +463,13 @@ export function ImageStudio() {
             a.click();
             document.body.removeChild(a);
             URL.revokeObjectURL(blobUrl);
+            toast.success('Image downloaded successfully');
         } catch (err) {
-            // Fallback: open in new tab
             window.open(url, '_blank');
+            toast.error('Direct download failed. Opened in new tab.');
         }
     };
 
-    // --- Load history from localStorage ---
     try {
         const saved = JSON.parse(localStorage.getItem('muapi_history') || '[]');
         if (saved.length > 0) {
@@ -476,7 +480,6 @@ export function ImageStudio() {
         }
     } catch (e) { /* ignore */ }
 
-    // --- Button Handlers ---
     downloadBtn.onclick = () => {
         const current = resultImg.src;
         if (current) {
@@ -490,56 +493,42 @@ export function ImageStudio() {
     };
 
     newPromptBtn.onclick = () => {
-        // Reset to prompt view
         canvas.classList.add('opacity-0', 'pointer-events-none', 'translate-y-10', 'scale-95');
         canvas.classList.remove('opacity-100', 'translate-y-0', 'scale-100');
         canvasControls.classList.add('opacity-0');
         canvasControls.classList.remove('opacity-100');
-        // Restore hero and prompt
         hero.classList.remove('hidden', 'opacity-0', 'scale-95', '-translate-y-10', 'pointer-events-none');
         promptWrapper.classList.remove('hidden', 'opacity-40');
         textarea.value = '';
         textarea.focus();
     };
 
-    // ==========================================
-    // 5. GENERATION LOGIC
-    // ==========================================
     generateBtn.onclick = async () => {
         const prompt = textarea.value.trim();
         if (!prompt) return;
 
-        // Lazy API Key Check
         const apiKey = localStorage.getItem('muapi_key');
         if (!apiKey) {
             AuthModal(() => {
-                // Key saved, now trigger generation
                 generateBtn.click();
             });
             return;
         }
 
-        // Animate Out Hero
         hero.classList.add('opacity-0', 'scale-95', '-translate-y-10', 'pointer-events-none');
-
         generateBtn.disabled = true;
-        // Improved loading state
         generateBtn.innerHTML = `<span class="animate-spin inline-block mr-2 text-black">◌</span> Generating...`;
         generateBtn.className += ' opacity-80 cursor-wait';
 
         try {
-            // Optional: Show a skeleton/loading placeholder in canvas
-
+            toast.info('Processing your prompt...');
             const res = await muapi.generateImage({
                 prompt,
                 model: selectedModel,
                 aspect_ratio: selectedAr
             });
 
-            console.log('[ImageStudio] Full response:', res);
-
             if (res && res.url) {
-                // Add to history
                 addToHistory({
                     id: res.id || Date.now().toString(),
                     url: res.url,
@@ -548,16 +537,15 @@ export function ImageStudio() {
                     aspect_ratio: selectedAr,
                     timestamp: new Date().toISOString()
                 });
-
-                // Show image
                 showImageInCanvas(res.url);
+                toast.success('Generation complete ✨');
             } else {
-                console.error('[ImageStudio] No image URL in response:', res);
                 throw new Error('No image URL returned by API');
             }
         } catch (e) {
             console.error(e);
             generateBtn.innerHTML = `Error: ${e.message.slice(0, 40)}`;
+            toast.error(`Generation failed: ${e.message}`);
             setTimeout(() => {
                 generateBtn.innerHTML = `Generate ✨`;
                 generateBtn.disabled = false;
@@ -570,23 +558,11 @@ export function ImageStudio() {
         }
     };
 
-    // ==========================================
-    // REMIX LOGIC (From Global State/Storage)
-    // ==========================================
     setTimeout(() => {
         const remixData = localStorage.getItem('remixData');
         if (remixData) {
             try {
                 const data = JSON.parse(remixData);
-                console.log('Remixing Image:', data);
-                // Only consume if it's explicitly for image, OR if it's generic (Explore items)
-                // Explore items have 'type' property.
-                if (data.type && data.type !== 'image') {
-                    // If it's video data but we are in ImageStudio, maybe user navigated manually?
-                    // But remix button logic handles target page.
-                    // So we assume if we are here, it's meant for us.
-                }
-
                 if (data.prompt) {
                     textarea.value = data.prompt;
                     textarea.dispatchEvent(new Event('input'));
