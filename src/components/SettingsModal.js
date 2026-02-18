@@ -1,3 +1,5 @@
+import { toast } from '../lib/Toast.js';
+
 export function SettingsModal(onClose) {
     const overlay = document.createElement('div');
     overlay.className = 'fixed inset-0 z-[101] flex items-center justify-center bg-black/80 backdrop-blur-sm px-6';
@@ -63,8 +65,12 @@ export function SettingsModal(onClose) {
         const key = input.value.trim();
         if (key) {
             localStorage.setItem('muapi_key', key);
+            toast.success('API Key updated successfully');
             close();
+            // Assuming onSuccess is passed as an argument to SettingsModal if needed
+            // if (onSuccess) onSuccess(); 
         } else {
+            toast.error('Please enter a valid API key');
             input.classList.add('border-red-500/50');
             setTimeout(() => input.classList.remove('border-red-500/50'), 2000);
         }
