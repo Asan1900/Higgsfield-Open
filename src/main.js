@@ -6,56 +6,91 @@ import { eventBus } from './lib/EventBus.js';
 
 const app = document.querySelector('#app');
 let contentArea;
-let pendingContext = null; // Context data for cross-studio navigation
+let pendingContext = null;
+
+// Global Loading Overlay
+const loadingOverlay = document.createElement('div');
+loadingOverlay.className = 'fixed inset-0 bg-black/60 backdrop-blur-md z-[9999] flex items-center justify-center pointer-events-none opacity-0 transition-opacity duration-300';
+loadingOverlay.innerHTML = `
+    <div class="flex flex-col items-center gap-4">
+        <div class="w-12 h-12 border-4 border-primary/20 border-t-primary rounded-full animate-spin"></div>
+        <span class="text-xs font-black text-white uppercase tracking-[0.2em] animate-pulse">Loading Studio...</span>
+    </div>
+`;
+document.body.appendChild(loadingOverlay);
+
+/**
+ * Global loading state manager
+ * @param {boolean} isLoading 
+ */
+function setLoading(isLoading) {
+  if (isLoading) {
+    loadingOverlay.classList.remove('pointer-events-none', 'opacity-0');
+    loadingOverlay.classList.add('opacity-100');
+  } else {
+    loadingOverlay.classList.add('pointer-events-none', 'opacity-0');
+    loadingOverlay.classList.remove('opacity-100');
+  }
+}
 
 // Router
-function navigate(page, context) {
+async function navigate(page, context) {
   if (!contentArea) return;
+  
+  setLoading(true);
+  
+  // Clean up previous content if it has a cleanup function
+  const oldContent = contentArea.firstChild;
+  if (oldContent && oldContent._cleanup) {
+    try { oldContent._cleanup(); } catch (e) { console.warn('Cleanup error:', e); }
+  }
+
   contentArea.innerHTML = '';
   pendingContext = context || null;
 
-  if (page === 'image') {
-    contentArea.appendChild(ImageStudio());
-  } else if (page === 'video') {
-    import('./components/VideoStudio.js').then(({ VideoStudio }) => {
+  try {
+    if (page === 'image') {
+      contentArea.appendChild(ImageStudio());
+    } else if (page === 'video') {
+      const { VideoStudio } = await import('./components/VideoStudio.js');
       contentArea.appendChild(VideoStudio());
-    });
-  } else if (page === 'cinema') {
-    import('./components/CinemaStudio.js').then(({ CinemaStudio }) => {
+    } else if (page === 'cinema') {
+      const { CinemaStudio } = await import('./components/CinemaStudio.js');
       contentArea.appendChild(CinemaStudio());
-    });
-  } else if (page === 'character') {
-    import('./components/CharacterStudio.js').then(({ CharacterStudio }) => {
+    } else if (page === 'character') {
+      const { CharacterStudio } = await import('./components/CharacterStudio.js');
       contentArea.appendChild(CharacterStudio());
-    });
-  } else if (page === 'edit') {
-    import('./components/EditSuite.js').then(({ EditSuite }) => {
+    } else if (page === 'edit') {
+      const { EditSuite } = await import('./components/EditSuite.js');
       contentArea.appendChild(EditSuite(pendingContext || {}));
       pendingContext = null;
-    });
-  } else if (page === 'vibemotion') {
-    import('./components/VibeMotion.js').then(({ VibeMotion }) => {
+    } else if (page === 'vibemotion') {
+      const { VibeMotion } = await import('./components/VibeMotion.js');
       contentArea.appendChild(VibeMotion());
-    });
-  } else if (page === 'popcorn') {
-    import('./components/PopcornStudio.js').then(({ PopcornStudio }) => {
+    } else if (page === 'popcorn') {
+      const { PopcornStudio } = await import('./components/PopcornStudio.js');
       contentArea.appendChild(PopcornStudio());
-    });
-  } else if (page === 'explore') {
-    import('./components/Explore.js').then(({ Explore }) => {
+    } else if (page === 'explore') {
+      const { Explore } = await import('./components/Explore.js');
       contentArea.appendChild(Explore());
-    });
-  } else {
-    // Coming Soon / Fallback pages
-    const titles = {
-      'contests': 'Contests',
-      'ai-influencer': 'AI Influencer',
-      'apps': 'Apps',
-      'assist': 'Assist',
-      'community': 'Community'
-    };
-    const title = titles[page] || 'Coming Soon';
-    contentArea.appendChild(ComingSoon(title));
+    } else {
+      // Coming Soon / Fallback pages
+      const titles = {
+        'contests': 'Contests',
+        'ai-influencer': 'AI Influencer',
+        'apps': 'Apps',
+        'assist': 'Assist',
+        'community': 'Community'
+      };
+      const title = titles[page] || 'Coming Soon';
+      contentArea.appendChild(ComingSoon(title));
+    }
+  } catch (err) {
+    console.error(`Failed to navigate to ${page}:`, err);
+    contentArea.innerHTML = `<div class="flex-1 flex items-center justify-center text-red-500 font-bold p-10 text-center">Failed to load ${page}. Please try again later.</div>`;
+  } finally {
+    // Artificial delay for smooth transition if it loads too fast
+    setTimeout(() => setLoading(false), 300);
   }
 }
 

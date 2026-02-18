@@ -68,11 +68,11 @@ export function ImageStudio() {
     // 2. PROMPT BAR (Tailwind Refactor)
     // ==========================================
     const promptWrapper = document.createElement('div');
-    promptWrapper.className = 'w-full max-w-4xl relative z-40 animate-fade-in-up';
+    promptWrapper.className = 'w-full max-w-4xl relative z-50 animate-fade-in-up';
     promptWrapper.style.animationDelay = '0.2s';
 
     const bar = document.createElement('div');
-    bar.className = 'w-full bg-[#111]/90 backdrop-blur-xl border border-white/10 rounded-[1.5rem] md:rounded-[2.5rem] p-3 md:p-5 flex flex-col gap-3 md:gap-5 shadow-3xl transition-all duration-300';
+    bar.className = 'w-full bg-[#111]/90 backdrop-blur-xl border border-white/10 rounded-[1.5rem] md:rounded-[2.5rem] p-3 md:p-5 flex flex-col gap-3 md:gap-5 shadow-[0_20px_50px_rgba(0,0,0,0.5)] transition-all duration-300';
 
     // Top Row: Input
     const topRow = document.createElement('div');
