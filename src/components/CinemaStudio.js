@@ -545,10 +545,27 @@ export function CinemaStudio() {
     const historySidebar = document.createElement('div');
     historySidebar.className = 'fixed right-0 top-0 h-full w-20 md:w-24 bg-black/60 backdrop-blur-xl border-l border-white/5 z-50 flex flex-col items-center py-4 gap-3 overflow-y-auto transition-all duration-500';
 
+    const historyHeader = document.createElement('div');
+    historyHeader.className = 'flex flex-col items-center mb-2';
+
     const historyLabel = document.createElement('div');
-    historyLabel.className = 'text-[9px] font-bold text-white/40 uppercase tracking-widest mb-2';
+    historyLabel.className = 'text-[9px] font-bold text-white/40 uppercase tracking-widest rotate-0';
     historyLabel.textContent = 'History';
-    historySidebar.appendChild(historyLabel);
+
+    const clearHistoryBtn = document.createElement('button');
+    clearHistoryBtn.className = 'text-[8px] font-black text-primary/40 hover:text-primary uppercase tracking-tighter mt-1 transition-colors';
+    clearHistoryBtn.textContent = 'Clear All';
+    clearHistoryBtn.onclick = () => {
+        if (confirm('Clear all cinema generation history?')) {
+            generationHistory.length = 0;
+            localStorage.removeItem('cinema_history');
+            renderHistory();
+        }
+    };
+
+    historyHeader.appendChild(historyLabel);
+    historyHeader.appendChild(clearHistoryBtn);
+    historySidebar.appendChild(historyHeader);
 
     const historyList = document.createElement('div');
     historyList.className = 'flex flex-col gap-2 w-full px-2';
@@ -599,7 +616,26 @@ export function CinemaStudio() {
     const sendToEditorBtn = createActionBtn('✂️ Edit');
     const sendToTimelineBtn = createActionBtn('🎬 Timeline');
 
+    const copyPromptBtn = createActionBtn('📋 Copy');
+    copyPromptBtn.onclick = async () => {
+        if (lastGeneratedEntry && lastGeneratedEntry.settings && lastGeneratedEntry.settings.prompt) {
+            try {
+                await navigator.clipboard.writeText(lastGeneratedEntry.settings.prompt);
+                const originalText = copyPromptBtn.textContent;
+                copyPromptBtn.textContent = '✓ Copied!';
+                copyPromptBtn.classList.add('text-primary');
+                setTimeout(() => {
+                    copyPromptBtn.textContent = originalText;
+                    copyPromptBtn.classList.remove('text-primary');
+                }, 2000);
+            } catch (err) {
+                console.error('Failed to copy prompt', err);
+            }
+        }
+    };
+
     canvasControls.appendChild(regenerateBtn);
+    canvasControls.appendChild(copyPromptBtn);
     canvasControls.appendChild(downloadBtn);
     canvasControls.appendChild(addToStoryBtn);
     canvasControls.appendChild(sendToEditorBtn);
