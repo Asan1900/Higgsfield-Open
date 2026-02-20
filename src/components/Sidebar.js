@@ -8,7 +8,8 @@ export function Sidebar() {
   element.style.alignItems = 'center';
   element.style.padding = '1.5rem 0';
   element.style.zIndex = '50';
-  element.style.background = 'var(--bg-panel)';
+  element.style.background = 'linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02))';
+  element.style.borderRight = '1px solid rgba(255,255,255,0.08)';
 
   // Logo
   const logo = document.createElement('div');
@@ -30,11 +31,14 @@ export function Sidebar() {
 
   const createButton = (item) => {
     const container = document.createElement('div');
-    container.className = 'flex flex-col items-center gap-1 mb-6 cursor-pointer group';
+    container.className = 'relative flex flex-col items-center gap-1 mb-6 cursor-pointer group pl-2';
 
     const iconBtn = document.createElement('button');
     iconBtn.innerHTML = item.icon;
-    iconBtn.className = 'w-10 h-10 rounded-xl flex items-center justify-center transition-all bg-transparent text-secondary group-hover:bg-white/5 group-hover:text-white';
+    iconBtn.className = 'w-10 h-10 rounded-xl flex items-center justify-center transition-all bg-transparent text-secondary group-hover:bg-white/5 group-hover:text-white shadow-[0_0_0_rgba(0,0,0,0)] group-hover:shadow-[0_10px_30px_rgba(0,0,0,0.25)]';
+
+    const indicator = document.createElement('div');
+    indicator.className = 'absolute left-0 top-1/2 -translate-y-1/2 h-8 w-1 rounded-full bg-primary/80 opacity-0 scale-75 transition-all duration-200 group-hover:opacity-50 group-hover:scale-100';
 
     const label = document.createElement('span');
     label.textContent = item.label;
@@ -43,7 +47,10 @@ export function Sidebar() {
     if (activeTab === item.id && item.id !== 'settings') {
       iconBtn.classList.add('active-nav-btn');
       iconBtn.style.color = 'var(--color-primary)';
+      iconBtn.style.background = 'rgba(255,255,255,0.04)';
       label.style.color = 'var(--color-primary)';
+      indicator.style.opacity = '1';
+      indicator.style.scale = '1';
     }
 
     container.onclick = () => {
@@ -56,13 +63,23 @@ export function Sidebar() {
           btn.classList.remove('active-nav-btn');
           btn.style.color = 'var(--text-secondary)';
           btn.nextSibling.style.color = 'var(--text-secondary)';
+          const previousIndicator = btn.parentElement.querySelector('.active-indicator');
+          if (previousIndicator) {
+            previousIndicator.style.opacity = '0';
+            previousIndicator.style.scale = '0.75';
+          }
         });
         iconBtn.classList.add('active-nav-btn');
         iconBtn.style.color = 'var(--color-primary)';
+        iconBtn.style.background = 'rgba(255,255,255,0.04)';
         label.style.color = 'var(--color-primary)';
+        indicator.style.opacity = '1';
+        indicator.style.scale = '1';
       }
     };
 
+    indicator.classList.add('active-indicator');
+    container.appendChild(indicator);
     container.appendChild(iconBtn);
     container.appendChild(label);
     return container;

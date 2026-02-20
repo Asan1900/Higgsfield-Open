@@ -73,6 +73,18 @@ async function navigate(page, context) {
     } else if (page === 'explore') {
       const { Explore } = await import('./components/Explore.js');
       contentArea.appendChild(Explore());
+    } else if (page === 'remix') {
+      const { Remix } = await import('./components/Remix.js');
+      contentArea.appendChild(Remix());
+    } else if (page === 'upscale') {
+      const { Upscale } = await import('./components/Upscale.js');
+      contentArea.appendChild(Upscale());
+    } else if (page === 'background') {
+      const { Background } = await import('./components/Background.js');
+      contentArea.appendChild(Background());
+    } else if (page === 'style-mix') {
+      const { StyleMix } = await import('./components/StyleMix.js');
+      contentArea.appendChild(StyleMix());
     } else {
       // Coming Soon / Fallback pages
       const titles = {
@@ -80,11 +92,18 @@ async function navigate(page, context) {
         'ai-influencer': 'AI Influencer',
         'apps': 'Apps',
         'assist': 'Assist',
-        'community': 'Community'
+        'community': 'Community',
+        'remix': 'Remix',
+        'upscale': 'Upscale',
+        'background': 'Background',
+        'style-mix': 'Style Mix'
       };
       const title = titles[page] || 'Coming Soon';
       contentArea.appendChild(ComingSoon(title));
     }
+
+    // Notify header to update active state
+    window.dispatchEvent(new CustomEvent('route:changed', { detail: { page } }));
   } catch (err) {
     console.error(`Failed to navigate to ${page}:`, err);
     contentArea.innerHTML = `<div class="flex-1 flex items-center justify-center text-red-500 font-bold p-10 text-center">Failed to load ${page}. Please try again later.</div>`;
