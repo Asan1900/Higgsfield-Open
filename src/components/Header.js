@@ -1,4 +1,4 @@
-import { AuthModal } from './AuthModal.js';
+// Imports
 
 export function Header(navigate) {
     const header = document.createElement('header');
@@ -29,66 +29,302 @@ export function Header(navigate) {
     logoContainer.onclick = () => navigate('image');
 
     const menu = document.createElement('nav');
-    menu.className = 'hidden lg:flex items-center gap-6 text-[13px] font-bold text-secondary';
-    const items = ['Explore', 'Image', 'Video', 'Popcorn 🍿', 'Edit', 'Character', 'Contests', 'Vibe Motion', 'Cinema Studio', 'AI Influencer', 'Apps', 'Assist', 'Community'];
+    menu.className = 'hidden lg:flex items-center gap-4 text-[13px] font-bold text-secondary';
+    const items = ['Explore', 'Image', 'Video', 'Edit', 'Character', 'Contests', 'Cinema Studio', 'AI Influencer', 'Apps', 'Community'];
+
+    // Track open dropdown (desktop)
+    let openDropdown = null;
+    const closeDropdown = () => {
+        if (openDropdown) {
+            const { btn, menuEl } = openDropdown;
+            menuEl.classList.add('opacity-0', 'pointer-events-none', 'translate-y-2');
+            menuEl.classList.remove('opacity-100', 'pointer-events-auto', 'translate-y-0');
+            btn.setAttribute('aria-expanded', 'false');
+            openDropdown = null;
+        }
+    };
+    document.addEventListener('click', (e) => {
+        // Close when clicking outside
+        if (openDropdown && !openDropdown.wrapper.contains(e.target)) {
+            closeDropdown();
+        }
+    });
+    // Close dropdowns on route change
+    window.addEventListener('route:changed', closeDropdown);
 
     const createNavLink = (item, isMobile = false) => {
-        const link = document.createElement('a');
-        link.textContent = item;
-        link.className = isMobile
-            ? `text-lg font-black text-secondary hover:text-white transition-all cursor-pointer py-4 border-b border-white/5 w-full flex justify-between items-center`
-            : `hover:text-white transition-all cursor-pointer relative group text-secondary`;
-
         const routes = {
             'Image': 'image',
             'Video': 'video',
-            'Popcorn 🍿': 'popcorn',
             'Cinema Studio': 'cinema',
             'Explore': 'explore',
             'Character': 'character',
             'Edit': 'edit',
-            'Vibe Motion': 'vibemotion',
             'Contests': 'contests',
             'AI Influencer': 'ai-influencer',
             'Apps': 'apps',
-            'Assist': 'assist',
             'Community': 'community'
         };
 
         const route = routes[item];
 
-        // Active Indicator or Dot (only for desktop menu)
-        if (!isMobile && item === 'Image') {
-            link.classList.add('text-white');
-            const dot = document.createElement('div');
-            dot.className = 'active-dot absolute -bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 bg-primary rounded-full';
-            link.appendChild(dot);
+        // Mobile keeps the simpler link style
+        if (isMobile) {
+            const mobileLink = document.createElement('a');
+            mobileLink.textContent = item;
+            mobileLink.className = 'text-lg font-black text-secondary hover:text-white transition-all cursor-pointer py-4 border-b border-white/5 w-full flex justify-between items-center';
+            if (item === 'Contests' || item === 'Popcorn 🍿' || item === 'Image') {
+                const badge = document.createElement('span');
+                badge.className = 'bg-primary/10 text-primary text-[8px] px-1.5 py-0.5 rounded-full ml-1 border border-primary/20';
+                badge.textContent = 'New';
+                mobileLink.appendChild(badge);
+            }
+            mobileLink.onclick = () => {
+                closeMobileMenu();
+                if (route) navigate(route);
+            };
+            return mobileLink;
         }
 
-        if (item === 'Contests' || item === 'Popcorn 🍿') {
-            link.innerHTML += ' <span class="bg-primary/10 text-primary text-[8px] px-1.5 py-0.5 rounded-full ml-1 border border-primary/20">New</span>';
+        // Desktop structured button + badge, aria + data attributes
+        const wrapper = document.createElement('div');
+        wrapper.className = 'group relative';
+
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.setAttribute('aria-haspopup', 'menu');
+        btn.setAttribute('aria-controls', `${route || 'menu'}-menu`);
+        btn.setAttribute('aria-expanded', 'false');
+        btn.dataset.headerMenu = `${route || 'menu'}-menu`;
+        btn.dataset.headerMenuTrigger = 'true';
+        btn.dataset.headerActiveOn = `/${route || ''}/**`;
+        btn.dataset.active = route === 'image' ? 'true' : 'false';
+        btn.className = 'inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-[13px] font-bold leading-tight transition group-hover:bg-white/5 focus:bg-white/5 text-secondary data-[active=true]:text-white active:opacity-70 hover:text-primary align-middle';
+        btn.textContent = item;
+
+        if (item === 'Contests' || item === 'Popcorn 🍿' || item === 'Image') {
+            const badge = document.createElement('span');
+            badge.className = 'inline-flex items-center justify-center h-5 min-w-[26px] rounded-sm text-[10px] font-bold bg-primary/10 text-primary px-1 border border-primary/20';
+            badge.textContent = 'New';
+            btn.appendChild(badge);
         }
 
-        link.onclick = (e) => {
-            // Remove active state from all desktop links
-            if (!isMobile) {
-                Array.from(menu.children).forEach(child => {
-                    child.classList.remove('text-white');
-                    const existingDot = child.querySelector('.active-dot');
-                    if (existingDot) existingDot.remove();
-                });
-                // Add active state to current desktop link
-                link.classList.add('text-white');
+        const setActive = (isActive) => {
+            btn.dataset.active = isActive ? 'true' : 'false';
+            btn.setAttribute('aria-expanded', isActive ? 'true' : 'false');
+            // remove existing dots
+            const existingDot = wrapper.querySelector('.active-dot');
+            if (existingDot) existingDot.remove();
+            if (isActive) {
                 const dot = document.createElement('div');
                 dot.className = 'active-dot absolute -bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 bg-primary rounded-full';
-                link.appendChild(dot);
-            } else {
-                closeMobileMenu();
+                wrapper.appendChild(dot);
             }
-            if (route) navigate(route);
         };
 
-        return link;
+        // initial active state
+        setActive(item === 'Image');
+
+        // Optional dropdowns
+        let dropdown;
+        if (item === 'Image') {
+            dropdown = document.createElement('div');
+            dropdown.id = `${route}-menu`;
+            dropdown.setAttribute('role', 'menu');
+            dropdown.className = 'absolute top-full left-0 mt-3 w-56 rounded-2xl bg-[#0b0b0f]/95 border border-white/10 shadow-2xl overflow-hidden opacity-0 pointer-events-none translate-y-2 transition-all duration-200 backdrop-blur-xl';
+            dropdown.innerHTML = `
+                <div class="flex flex-col divide-y divide-white/5">
+                    <button class="flex items-center gap-3 px-4 py-3 text-left text-white text-sm font-bold hover:bg-white/5 transition" role="menuitem" data-dest="image">
+                        <span class="w-8 h-8 rounded-xl bg-primary/15 border border-primary/30 flex items-center justify-center text-[11px] font-black text-primary">AI</span>
+                        <div class="flex flex-col leading-tight">
+                            <span>Image Studio</span>
+                            <span class="text-[11px] text-secondary">Create from text prompts</span>
+                        </div>
+                    </button>
+                    <button class="flex items-center gap-3 px-4 py-3 text-left text-white text-sm font-bold hover:bg-white/5 transition" role="menuitem" data-dest="remix">
+                        <span class="w-8 h-8 rounded-xl bg-amber-300/20 border border-amber-200/40 flex items-center justify-center text-[11px] font-black text-amber-200">Fx</span>
+                        <div class="flex flex-col leading-tight">
+                            <span>Remix</span>
+                            <span class="text-[11px] text-secondary">Start from an existing asset</span>
+                        </div>
+                    </button>
+                    <button class="flex items-center gap-3 px-4 py-3 text-left text-white text-sm font-bold hover:bg-white/5 transition" role="menuitem" data-dest="upscale">
+                        <span class="w-8 h-8 rounded-xl bg-emerald-300/15 border border-emerald-200/40 flex items-center justify-center text-[11px] font-black text-emerald-200">Up</span>
+                        <div class="flex flex-col leading-tight">
+                            <span>Upscale</span>
+                            <span class="text-[11px] text-secondary">Enhance resolution</span>
+                        </div>
+                    </button>
+                    <button class="flex items-center gap-3 px-4 py-3 text-left text-white text-sm font-bold hover:bg-white/5 transition" role="menuitem" data-dest="background">
+                        <span class="w-8 h-8 rounded-xl bg-fuchsia-300/15 border border-fuchsia-200/40 flex items-center justify-center text-[11px] font-black text-fuchsia-200">Bg</span>
+                        <div class="flex flex-col leading-tight">
+                            <span>Background</span>
+                            <span class="text-[11px] text-secondary">Remove or replace</span>
+                        </div>
+                    </button>
+                    <button class="flex items-center gap-3 px-4 py-3 text-left text-white text-sm font-bold hover:bg-white/5 transition" role="menuitem" data-dest="popcorn">
+                        <span class="w-8 h-8 rounded-xl bg-amber-300/20 border border-amber-200/40 flex items-center justify-center text-[11px] font-black text-amber-200">🍿</span>
+                        <div class="flex flex-col leading-tight">
+                            <span>Popcorn Comics</span>
+                            <span class="text-[11px] text-secondary">Create comic strips</span>
+                        </div>
+                    </button>
+                    <button class="flex items-center gap-3 px-4 py-3 text-left text-white text-sm font-bold hover:bg-white/5 transition" role="menuitem" data-dest="style-mix">
+                        <span class="w-8 h-8 rounded-xl bg-indigo-300/15 border border-indigo-200/40 flex items-center justify-center text-[11px] font-black text-indigo-200">St</span>
+                        <div class="flex flex-col leading-tight">
+                            <span>Style Mix</span>
+                            <span class="text-[11px] text-secondary">Blend references</span>
+                        </div>
+                    </button>
+                </div>
+            `;
+
+            dropdown.querySelectorAll('button[role="menuitem"]').forEach(btnEl => {
+                btnEl.onclick = (e) => {
+                    e.stopPropagation();
+                    closeDropdown();
+                    const dest = btnEl.dataset.dest;
+                    navigate(dest);
+                };
+            });
+
+            wrapper.appendChild(dropdown);
+        } else if (item === 'Video') {
+            dropdown = document.createElement('div');
+            dropdown.id = `${route}-menu`;
+            dropdown.setAttribute('role', 'menu');
+            dropdown.className = 'absolute top-full left-0 mt-3 w-56 rounded-2xl bg-[#0b0b0f]/95 border border-white/10 shadow-2xl overflow-hidden opacity-0 pointer-events-none translate-y-2 transition-all duration-200 backdrop-blur-xl';
+            dropdown.innerHTML = `
+                <div class="flex flex-col divide-y divide-white/5">
+                    <button class="flex items-center gap-3 px-4 py-3 text-left text-white text-sm font-bold hover:bg-white/5 transition" role="menuitem" data-dest="video">
+                        <span class="w-8 h-8 rounded-xl bg-blue-300/15 border border-blue-200/40 flex items-center justify-center text-[11px] font-black text-blue-200">Vid</span>
+                        <div class="flex flex-col leading-tight">
+                            <span>Video Studio</span>
+                            <span class="text-[11px] text-secondary">Compose and render</span>
+                        </div>
+                    </button>
+                    <button class="flex items-center gap-3 px-4 py-3 text-left text-white text-sm font-bold hover:bg-white/5 transition" role="menuitem" data-dest="popcorn">
+                        <span class="w-8 h-8 rounded-xl bg-amber-300/20 border border-amber-200/40 flex items-center justify-center text-[11px] font-black text-amber-200">🍿</span>
+                        <div class="flex flex-col leading-tight">
+                            <span>Popcorn Studio</span>
+                            <span class="text-[11px] text-secondary">Snackable edits</span>
+                        </div>
+                    </button>
+                </div>
+            `;
+
+            dropdown.querySelectorAll('button[role="menuitem"]').forEach(btnEl => {
+                btnEl.onclick = (e) => {
+                    e.stopPropagation();
+                    closeDropdown();
+                    const dest = btnEl.dataset.dest;
+                    if (dest === 'video') navigate('video');
+                    else if (dest === 'popcorn') navigate('popcorn');
+                };
+            });
+
+            wrapper.appendChild(dropdown);
+        } else if (item === 'Cinema Studio') {
+            dropdown = document.createElement('div');
+            dropdown.id = `${route}-menu`;
+            dropdown.setAttribute('role', 'menu');
+            dropdown.className = 'absolute top-full left-0 mt-3 w-56 rounded-2xl bg-[#0b0b0f]/95 border border-white/10 shadow-2xl overflow-hidden opacity-0 pointer-events-none translate-y-2 transition-all duration-200 backdrop-blur-xl';
+            dropdown.innerHTML = `
+                <div class="flex flex-col divide-y divide-white/5">
+                    <button class="flex items-center gap-3 px-4 py-3 text-left text-white text-sm font-bold hover:bg-white/5 transition" role="menuitem" data-dest="cinema">
+                        <span class="w-8 h-8 rounded-xl bg-purple-300/15 border border-purple-200/40 flex items-center justify-center text-[11px] font-black text-purple-200">Cam</span>
+                        <div class="flex flex-col leading-tight">
+                            <span>Cinema Studio</span>
+                            <span class="text-[11px] text-secondary">Shots & motion</span>
+                        </div>
+                    </button>
+                    <button class="flex items-center gap-3 px-4 py-3 text-left text-white text-sm font-bold hover:bg-white/5 transition" role="menuitem" data-dest="vibemotion">
+                        <span class="w-8 h-8 rounded-xl bg-pink-300/15 border border-pink-200/40 flex items-center justify-center text-[11px] font-black text-pink-200">VM</span>
+                        <div class="flex flex-col leading-tight">
+                            <span>Vibe Motion</span>
+                            <span class="text-[11px] text-secondary">Rhythm & pacing</span>
+                        </div>
+                    </button>
+                    <button class="flex items-center gap-3 px-4 py-3 text-left text-white text-sm font-bold hover:bg-white/5 transition" role="menuitem" data-dest="vibemotion">
+                        <span class="w-8 h-8 rounded-xl bg-sky-300/15 border border-sky-200/40 flex items-center justify-center text-[11px] font-black text-sky-200">Fx</span>
+                        <div class="flex flex-col leading-tight">
+                            <span>Motion FX</span>
+                            <span class="text-[11px] text-secondary">Preset camera moves</span>
+                        </div>
+                    </button>
+                </div>
+            `;
+
+            dropdown.querySelectorAll('button[role="menuitem"]').forEach(btnEl => {
+                btnEl.onclick = (e) => {
+                    e.stopPropagation();
+                    closeDropdown();
+                    const dest = btnEl.dataset.dest;
+                    if (dest === 'cinema') navigate('cinema');
+                    else if (dest === 'vibemotion') navigate('vibemotion');
+                };
+            });
+
+            wrapper.appendChild(dropdown);
+        }
+
+        const openDropdownForBtn = () => {
+            if (dropdown) {
+                const isOpen = openDropdown?.btn === btn;
+                closeDropdown();
+                if (!isOpen) {
+                    dropdown.classList.remove('opacity-0', 'pointer-events-none', 'translate-y-2');
+                    dropdown.classList.add('opacity-100', 'pointer-events-auto', 'translate-y-0');
+                    btn.setAttribute('aria-expanded', 'true');
+                    openDropdown = { btn, menuEl: dropdown, wrapper };
+                }
+            } else {
+                closeDropdown();
+            }
+        };
+
+        btn.onclick = (e) => {
+            e.stopPropagation();
+            Array.from(menu.children).forEach(child => {
+                const buttonEl = child.querySelector('button');
+                if (buttonEl) {
+                    buttonEl.dataset.active = 'false';
+                    buttonEl.setAttribute('aria-expanded', 'false');
+                }
+                const dot = child.querySelector('.active-dot');
+                if (dot) dot.remove();
+            });
+            setActive(true);
+            if (dropdown) {
+                openDropdownForBtn();
+            } else if (route) {
+                navigate(route);
+            }
+        };
+
+        if (dropdown) {
+            const stopScroll = (e) => {
+                if (openDropdown?.btn === btn) {
+                    e.stopPropagation();
+                    e.preventDefault();
+                }
+            };
+            // Keep dropdown open while scrolling (wheel) over nav/dropdown
+            wrapper.addEventListener('wheel', stopScroll, { passive: false });
+            dropdown.addEventListener('wheel', stopScroll, { passive: false });
+        }
+
+        // Update active state on global route changes
+        window.addEventListener('route:changed', (ev) => {
+            const current = ev.detail?.page;
+            const isActive = current === route;
+            setActive(isActive);
+        });
+
+        // Removed mouseleave auto-close to keep dropdown open while user scrolls
+
+        wrapper.appendChild(btn);
+        return wrapper;
     };
 
     items.forEach(item => {
@@ -110,7 +346,8 @@ export function Header(navigate) {
         </svg>
         <span class="text-[10px] font-bold uppercase tracking-tight hidden md:block">API Key</span>
     `;
-    keyBtn.onclick = () => {
+    keyBtn.onclick = async () => {
+        const { AuthModal } = await import('./AuthModal.js');
         AuthModal(() => {
             console.log('API Key updated successfully');
         });

@@ -7,6 +7,16 @@ export function ImageStudio() {
     const container = document.createElement('div');
     container.className = 'w-full h-full flex flex-col items-center justify-center bg-app-bg relative p-4 md:p-6 overflow-y-auto custom-scrollbar overflow-x-hidden';
 
+    // Ambient mesh + grid
+    const ambientLayer = document.createElement('div');
+    ambientLayer.className = 'pointer-events-none absolute inset-0 overflow-hidden';
+    ambientLayer.innerHTML = `
+        <div class="absolute -left-32 -top-32 w-80 h-80 bg-primary/10 blur-3xl rounded-full"></div>
+        <div class="absolute -right-24 top-10 w-64 h-64 bg-cyan-400/10 blur-3xl rounded-full"></div>
+        <div class="absolute inset-0 opacity-[0.07] bg-[radial-gradient(circle_at_top,_rgba(255,255,255,0.4)_1px,_transparent_0)] bg-[length:24px_24px]"></div>
+    `;
+    container.appendChild(ambientLayer);
+
     // --- State ---
     const defaultModel = t2iModels[0];
     let selectedModel = defaultModel.id;
@@ -135,7 +145,7 @@ export function ImageStudio() {
     qualityBtn.style.display = hasInitialRes ? 'flex' : 'none';
 
     const generateBtn = document.createElement('button');
-    generateBtn.className = 'bg-primary text-black px-6 md:px-8 py-3 md:py-3.5 rounded-xl md:rounded-[1.5rem] font-black text-sm md:text-base hover:shadow-glow hover:scale-105 active:scale-95 transition-all flex items-center justify-center gap-2.5 w-full sm:w-auto shadow-lg';
+    generateBtn.className = 'px-6 md:px-8 py-3 md:py-3.5 rounded-xl md:rounded-[1.5rem] font-black text-sm md:text-base transition-all flex items-center justify-center gap-2.5 w-full sm:w-auto shadow-[0_10px_40px_rgba(0,0,0,0.35)] bg-gradient-to-r from-primary via-amber-300 to-lime-300 text-black hover:scale-105 active:scale-95 hover:shadow-[0_15px_45px_rgba(0,0,0,0.45)]';
     generateBtn.innerHTML = `Generate ✨`;
 
     // Focus effects
