@@ -85,6 +85,27 @@ async function navigate(page, context) {
     } else if (page === 'style-mix') {
       const { StyleMix } = await import('./components/StyleMix.js');
       contentArea.appendChild(StyleMix());
+    } else if (page === 'look-transfer') {
+      const { LookTransfer } = await import('./components/LookTransfer.js');
+      contentArea.appendChild(LookTransfer());
+    } else if (page === 'outpaint') {
+      const { Outpaint } = await import('./components/Outpaint.js');
+      contentArea.appendChild(Outpaint());
+    } else if (page === 'object-edit') {
+      const { ObjectEdit } = await import('./components/ObjectEdit.js');
+      contentArea.appendChild(ObjectEdit());
+    } else if (page === 'prompt-edits') {
+      const { PromptEdits } = await import('./components/PromptEdits.js');
+      contentArea.appendChild(PromptEdits());
+    } else if (page === 'reimagine') {
+      const { Reimagine } = await import('./components/Reimagine.js');
+      contentArea.appendChild(Reimagine());
+    } else if (page === 'batch-look') {
+      const { BatchLook } = await import('./components/BatchLook.js');
+      contentArea.appendChild(BatchLook());
+    } else if (page === 'portrait-enhancer') {
+      const { PortraitEnhancer } = await import('./components/PortraitEnhancer.js');
+      contentArea.appendChild(PortraitEnhancer());
     } else {
       // Coming Soon / Fallback pages
       const titles = {

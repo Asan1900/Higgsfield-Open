@@ -43,6 +43,10 @@ export function Header(navigate) {
             openDropdown = null;
         }
     };
+    // Close on Escape
+    window.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') closeDropdown();
+    });
     document.addEventListener('click', (e) => {
         // Close when clicking outside
         if (openDropdown && !openDropdown.wrapper.contains(e.target)) {
@@ -131,45 +135,94 @@ export function Header(navigate) {
             dropdown = document.createElement('div');
             dropdown.id = `${route}-menu`;
             dropdown.setAttribute('role', 'menu');
-            dropdown.className = 'absolute top-full left-0 mt-3 w-56 rounded-2xl bg-[#0b0b0f]/95 border border-white/10 shadow-2xl overflow-hidden opacity-0 pointer-events-none translate-y-2 transition-all duration-200 backdrop-blur-xl';
+            dropdown.className = 'absolute top-full left-0 mt-3 w-56 max-h-[70vh] rounded-2xl bg-[#0b0b0f]/95 border border-white/10 shadow-[0_20px_60px_rgba(0,0,0,0.45)] overflow-y-auto custom-scrollbar opacity-0 pointer-events-none translate-y-2 transition-all duration-200 backdrop-blur-xl pr-1 overscroll-contain';
             dropdown.innerHTML = `
-                <div class="flex flex-col divide-y divide-white/5">
-                    <button class="flex items-center gap-3 px-4 py-3 text-left text-white text-sm font-bold hover:bg-white/5 transition" role="menuitem" data-dest="image">
+                <div class="flex flex-col divide-y divide-white/5 py-1">
+                    <button class="flex items-center gap-3 px-4 py-3 text-left text-white text-sm font-bold border border-transparent hover:bg-white/5 hover:border-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary/60 transition" role="menuitem" data-dest="image">
                         <span class="w-8 h-8 rounded-xl bg-primary/15 border border-primary/30 flex items-center justify-center text-[11px] font-black text-primary">AI</span>
                         <div class="flex flex-col leading-tight">
                             <span>Image Studio</span>
                             <span class="text-[11px] text-secondary">Create from text prompts</span>
                         </div>
                     </button>
-                    <button class="flex items-center gap-3 px-4 py-3 text-left text-white text-sm font-bold hover:bg-white/5 transition" role="menuitem" data-dest="remix">
+                    <button class="flex items-center gap-3 px-4 py-3 text-left text-white text-sm font-bold border border-transparent hover:bg-white/5 hover:border-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary/60 transition" role="menuitem" data-dest="remix">
                         <span class="w-8 h-8 rounded-xl bg-amber-300/20 border border-amber-200/40 flex items-center justify-center text-[11px] font-black text-amber-200">Fx</span>
                         <div class="flex flex-col leading-tight">
                             <span>Remix</span>
                             <span class="text-[11px] text-secondary">Start from an existing asset</span>
                         </div>
                     </button>
-                    <button class="flex items-center gap-3 px-4 py-3 text-left text-white text-sm font-bold hover:bg-white/5 transition" role="menuitem" data-dest="upscale">
+                    <button class="flex items-center gap-3 px-4 py-3 text-left text-white text-sm font-bold border border-transparent hover:bg-white/5 hover:border-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary/60 transition" role="menuitem" data-dest="upscale">
                         <span class="w-8 h-8 rounded-xl bg-emerald-300/15 border border-emerald-200/40 flex items-center justify-center text-[11px] font-black text-emerald-200">Up</span>
                         <div class="flex flex-col leading-tight">
                             <span>Upscale</span>
                             <span class="text-[11px] text-secondary">Enhance resolution</span>
                         </div>
                     </button>
-                    <button class="flex items-center gap-3 px-4 py-3 text-left text-white text-sm font-bold hover:bg-white/5 transition" role="menuitem" data-dest="background">
+                    <button class="flex items-center gap-3 px-4 py-3 text-left text-white text-sm font-bold border border-transparent hover:bg-white/5 hover:border-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary/60 transition" role="menuitem" data-dest="background">
                         <span class="w-8 h-8 rounded-xl bg-fuchsia-300/15 border border-fuchsia-200/40 flex items-center justify-center text-[11px] font-black text-fuchsia-200">Bg</span>
                         <div class="flex flex-col leading-tight">
                             <span>Background</span>
                             <span class="text-[11px] text-secondary">Remove or replace</span>
                         </div>
                     </button>
-                    <button class="flex items-center gap-3 px-4 py-3 text-left text-white text-sm font-bold hover:bg-white/5 transition" role="menuitem" data-dest="popcorn">
+                    <button class="flex items-center gap-3 px-4 py-3 text-left text-white text-sm font-bold border border-transparent hover:bg-white/5 hover:border-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary/60 transition" role="menuitem" data-dest="look-transfer">
+                        <span class="w-8 h-8 rounded-xl bg-orange-300/15 border border-orange-200/40 flex items-center justify-center text-[11px] font-black text-orange-200">LT</span>
+                        <div class="flex flex-col leading-tight">
+                            <span>Style-from-Reference</span>
+                            <span class="text-[11px] text-secondary">Smart look transfer</span>
+                        </div>
+                    </button>
+                    <button class="flex items-center gap-3 px-4 py-3 text-left text-white text-sm font-bold border border-transparent hover:bg-white/5 hover:border-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary/60 transition" role="menuitem" data-dest="outpaint">
+                        <span class="w-8 h-8 rounded-xl bg-cyan-300/15 border border-cyan-200/40 flex items-center justify-center text-[11px] font-black text-cyan-200">∞</span>
+                        <div class="flex flex-col leading-tight">
+                            <span>Generative Expansion</span>
+                            <span class="text-[11px] text-secondary">Smart outpainting</span>
+                        </div>
+                    </button>
+                    <button class="flex items-center gap-3 px-4 py-3 text-left text-white text-sm font-bold border border-transparent hover:bg-white/5 hover:border-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary/60 transition" role="menuitem" data-dest="object-edit">
+                        <span class="w-8 h-8 rounded-xl bg-lime-300/15 border border-lime-200/40 flex items-center justify-center text-[11px] font-black text-lime-200">Obj</span>
+                        <div class="flex flex-col leading-tight">
+                            <span>Object Edit & Swap</span>
+                            <span class="text-[11px] text-secondary">Remove/replace/move</span>
+                        </div>
+                    </button>
+                    <button class="flex items-center gap-3 px-4 py-3 text-left text-white text-sm font-bold border border-transparent hover:bg-white/5 hover:border-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary/60 transition" role="menuitem" data-dest="prompt-edits">
+                        <span class="w-8 h-8 rounded-xl bg-rose-300/15 border border-rose-200/40 flex items-center justify-center text-[11px] font-black text-rose-200">Txt</span>
+                        <div class="flex flex-col leading-tight">
+                            <span>Edit by Text</span>
+                            <span class="text-[11px] text-secondary">Prompt-guided local edits</span>
+                        </div>
+                    </button>
+                    <button class="flex items-center gap-3 px-4 py-3 text-left text-white text-sm font-bold border border-transparent hover:bg-white/5 hover:border-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary/60 transition" role="menuitem" data-dest="reimagine">
+                        <span class="w-8 h-8 rounded-xl bg-purple-300/15 border border-purple-200/40 flex items-center justify-center text-[11px] font-black text-purple-200">R∞</span>
+                        <div class="flex flex-col leading-tight">
+                            <span>Scene Reimagining</span>
+                            <span class="text-[11px] text-secondary">Cinematic/anime/cyberpunk</span>
+                        </div>
+                    </button>
+                    <button class="flex items-center gap-3 px-4 py-3 text-left text-white text-sm font-bold border border-transparent hover:bg-white/5 hover-border-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary/60 transition" role="menuitem" data-dest="batch-look">
+                        <span class="w-8 h-8 rounded-xl bg-sky-300/15 border border-sky-200/40 flex items-center justify-center text-[11px] font-black text-sky-200">Set</span>
+                        <div class="flex flex-col leading-tight">
+                            <span>Batch Consistent Look</span>
+                            <span class="text-[11px] text-secondary">Propagate look to sets</span>
+                        </div>
+                    </button>
+                    <button class="flex items-center gap-3 px-4 py-3 text-left text-white text-sm font-bold border border-transparent hover:bg-white/5 hover:border-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary/60 transition" role="menuitem" data-dest="portrait-enhancer">
+                        <span class="w-8 h-8 rounded-xl bg-amber-200/15 border border-amber-100/40 flex items-center justify-center text-[11px] font-black text-amber-200">Prt</span>
+                        <div class="flex flex-col leading-tight">
+                            <span>Portrait Enhancer</span>
+                            <span class="text-[11px] text-secondary">Face/skin/eyes controls</span>
+                        </div>
+                    </button>
+                    <button class="flex items-center gap-3 px-4 py-3 text-left text-white text-sm font-bold border border-transparent hover:bg-white/5 hover:border-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary/60 transition" role="menuitem" data-dest="popcorn">
                         <span class="w-8 h-8 rounded-xl bg-amber-300/20 border border-amber-200/40 flex items-center justify-center text-[11px] font-black text-amber-200">🍿</span>
                         <div class="flex flex-col leading-tight">
                             <span>Popcorn Comics</span>
                             <span class="text-[11px] text-secondary">Create comic strips</span>
                         </div>
                     </button>
-                    <button class="flex items-center gap-3 px-4 py-3 text-left text-white text-sm font-bold hover:bg-white/5 transition" role="menuitem" data-dest="style-mix">
+                    <button class="flex items-center gap-3 px-4 py-3 text-left text-white text-sm font-bold border border-transparent hover:bg-white/5 hover:border-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary/60 transition" role="menuitem" data-dest="style-mix">
                         <span class="w-8 h-8 rounded-xl bg-indigo-300/15 border border-indigo-200/40 flex items-center justify-center text-[11px] font-black text-indigo-200">St</span>
                         <div class="flex flex-col leading-tight">
                             <span>Style Mix</span>
@@ -196,14 +249,14 @@ export function Header(navigate) {
             dropdown.className = 'absolute top-full left-0 mt-3 w-56 rounded-2xl bg-[#0b0b0f]/95 border border-white/10 shadow-2xl overflow-hidden opacity-0 pointer-events-none translate-y-2 transition-all duration-200 backdrop-blur-xl';
             dropdown.innerHTML = `
                 <div class="flex flex-col divide-y divide-white/5">
-                    <button class="flex items-center gap-3 px-4 py-3 text-left text-white text-sm font-bold hover:bg-white/5 transition" role="menuitem" data-dest="video">
+                    <button class="flex items-center gap-3 px-4 py-3 text-left text-white text-sm font-bold border border-transparent hover:bg-white/5 hover:border-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary/60 transition" role="menuitem" data-dest="video">
                         <span class="w-8 h-8 rounded-xl bg-blue-300/15 border border-blue-200/40 flex items-center justify-center text-[11px] font-black text-blue-200">Vid</span>
                         <div class="flex flex-col leading-tight">
                             <span>Video Studio</span>
                             <span class="text-[11px] text-secondary">Compose and render</span>
                         </div>
                     </button>
-                    <button class="flex items-center gap-3 px-4 py-3 text-left text-white text-sm font-bold hover:bg-white/5 transition" role="menuitem" data-dest="popcorn">
+                    <button class="flex items-center gap-3 px-4 py-3 text-left text-white text-sm font-bold border border-transparent hover:bg-white/5 hover:border-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary/60 transition" role="menuitem" data-dest="popcorn">
                         <span class="w-8 h-8 rounded-xl bg-amber-300/20 border border-amber-200/40 flex items-center justify-center text-[11px] font-black text-amber-200">🍿</span>
                         <div class="flex flex-col leading-tight">
                             <span>Popcorn Studio</span>
@@ -231,21 +284,21 @@ export function Header(navigate) {
             dropdown.className = 'absolute top-full left-0 mt-3 w-56 rounded-2xl bg-[#0b0b0f]/95 border border-white/10 shadow-2xl overflow-hidden opacity-0 pointer-events-none translate-y-2 transition-all duration-200 backdrop-blur-xl';
             dropdown.innerHTML = `
                 <div class="flex flex-col divide-y divide-white/5">
-                    <button class="flex items-center gap-3 px-4 py-3 text-left text-white text-sm font-bold hover:bg-white/5 transition" role="menuitem" data-dest="cinema">
+                    <button class="flex items-center gap-3 px-4 py-3 text-left text-white text-sm font-bold border border-transparent hover:bg-white/5 hover:border-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary/60 transition" role="menuitem" data-dest="cinema">
                         <span class="w-8 h-8 rounded-xl bg-purple-300/15 border border-purple-200/40 flex items-center justify-center text-[11px] font-black text-purple-200">Cam</span>
                         <div class="flex flex-col leading-tight">
                             <span>Cinema Studio</span>
                             <span class="text-[11px] text-secondary">Shots & motion</span>
                         </div>
                     </button>
-                    <button class="flex items-center gap-3 px-4 py-3 text-left text-white text-sm font-bold hover:bg-white/5 transition" role="menuitem" data-dest="vibemotion">
+                    <button class="flex items-center gap-3 px-4 py-3 text-left text-white text-sm font-bold border border-transparent hover:bg-white/5 hover:border-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary/60 transition" role="menuitem" data-dest="vibemotion">
                         <span class="w-8 h-8 rounded-xl bg-pink-300/15 border border-pink-200/40 flex items-center justify-center text-[11px] font-black text-pink-200">VM</span>
                         <div class="flex flex-col leading-tight">
                             <span>Vibe Motion</span>
                             <span class="text-[11px] text-secondary">Rhythm & pacing</span>
                         </div>
                     </button>
-                    <button class="flex items-center gap-3 px-4 py-3 text-left text-white text-sm font-bold hover:bg-white/5 transition" role="menuitem" data-dest="vibemotion">
+                    <button class="flex items-center gap-3 px-4 py-3 text-left text-white text-sm font-bold border border-transparent hover:bg-white/5 hover:border-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary/60 transition" role="menuitem" data-dest="vibemotion">
                         <span class="w-8 h-8 rounded-xl bg-sky-300/15 border border-sky-200/40 flex items-center justify-center text-[11px] font-black text-sky-200">Fx</span>
                         <div class="flex flex-col leading-tight">
                             <span>Motion FX</span>
