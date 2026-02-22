@@ -8,7 +8,11 @@ export function Header(navigate) {
 
     // 2. Main Navigation Bar
     const navBar = document.createElement('div');
-    navBar.className = 'w-full h-16 bg-black flex items-center justify-between px-4 md:px-6 border-b border-white/5 backdrop-blur-md bg-opacity-95';
+    navBar.className = 'w-full h-16 bg-black flex items-center justify-between px-4 md:px-6 border-b border-white/5 backdrop-blur-md bg-opacity-95 relative overflow-hidden';
+    // Gradient shimmer behind nav
+    const navGlow = document.createElement('div');
+    navGlow.className = 'absolute inset-0 pointer-events-none bg-[radial-gradient(circle_at_20%_20%,rgba(118,255,122,0.18),transparent_32%),radial-gradient(circle_at_80%_10%,rgba(0,199,255,0.12),transparent_28%),radial-gradient(circle_at_50%_120%,rgba(255,255,255,0.08),transparent_40%)] opacity-70';
+    navBar.appendChild(navGlow);
 
     const leftPart = document.createElement('div');
     leftPart.className = 'flex items-center gap-8';
@@ -103,7 +107,7 @@ export function Header(navigate) {
         btn.dataset.headerMenuTrigger = 'true';
         btn.dataset.headerActiveOn = `/${route || ''}/**`;
         btn.dataset.active = route === 'image' ? 'true' : 'false';
-        btn.className = 'inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-[13px] font-bold leading-tight transition group-hover:bg-white/5 focus:bg-white/5 text-secondary data-[active=true]:text-white active:opacity-70 hover:text-primary align-middle';
+        btn.className = 'inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-[13px] font-bold leading-tight transition group-hover:bg-white/5 focus:bg-white/5 text-secondary data-[active=true]:text-white active:opacity-70 hover:text-primary align-middle hover:scale-[1.02] focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary/60';
         btn.textContent = item;
 
         if (item === 'Contests' || item === 'Popcorn 🍿' || item === 'Image') {
