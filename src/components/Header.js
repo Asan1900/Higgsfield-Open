@@ -8,7 +8,7 @@ export function Header(navigate) {
 
     // 2. Main Navigation Bar
     const navBar = document.createElement('div');
-    navBar.className = 'w-full h-16 bg-black flex items-center justify-between px-4 md:px-6 border-b border-white/5 backdrop-blur-md bg-opacity-95 relative overflow-hidden';
+    navBar.className = 'w-full h-16 bg-black flex items-center justify-between px-4 md:px-6 border-b border-white/5 backdrop-blur-md bg-opacity-95 relative overflow-visible';
     // Gradient shimmer behind nav
     const navGlow = document.createElement('div');
     navGlow.className = 'absolute inset-0 pointer-events-none bg-[radial-gradient(circle_at_20%_20%,rgba(118,255,122,0.18),transparent_32%),radial-gradient(circle_at_80%_10%,rgba(0,199,255,0.12),transparent_28%),radial-gradient(circle_at_50%_120%,rgba(255,255,255,0.08),transparent_40%)] opacity-70';
@@ -30,11 +30,11 @@ export function Header(navigate) {
         </div>
         <span class="text-white font-black text-sm tracking-tighter hidden sm:block uppercase">Open Higgsfield</span>
     `;
-    logoContainer.onclick = () => navigate('image');
+    logoContainer.onclick = () => navigate('contents');
 
     const menu = document.createElement('nav');
     menu.className = 'hidden lg:flex items-center gap-4 text-[13px] font-bold text-secondary';
-    const items = ['Explore', 'Image', 'Video', 'Edit', 'Character', 'Contests', 'Cinema Studio', 'AI Influencer', 'Apps', 'Community'];
+    const items = ['Home', 'Explore', 'Image', 'Video', 'Edit', 'Character', 'Cinema Studio', 'AI Influencer', 'Apps', 'Community'];
 
     // Track open dropdown (desktop)
     let openDropdown = null;
@@ -62,13 +62,13 @@ export function Header(navigate) {
 
     const createNavLink = (item, isMobile = false) => {
         const routes = {
+            'Home': 'contents',
             'Image': 'image',
             'Video': 'video',
             'Cinema Studio': 'cinema',
             'Explore': 'explore',
             'Character': 'character',
             'Edit': 'edit',
-            'Contests': 'contests',
             'AI Influencer': 'ai-influencer',
             'Apps': 'apps',
             'Community': 'community'
@@ -81,7 +81,7 @@ export function Header(navigate) {
             const mobileLink = document.createElement('a');
             mobileLink.textContent = item;
             mobileLink.className = 'text-lg font-black text-secondary hover:text-white transition-all cursor-pointer py-4 border-b border-white/5 w-full flex justify-between items-center';
-            if (item === 'Contests' || item === 'Popcorn 🍿' || item === 'Image') {
+            if (item === 'Popcorn 🍿' || item === 'Image') {
                 const badge = document.createElement('span');
                 badge.className = 'bg-primary/10 text-primary text-[8px] px-1.5 py-0.5 rounded-full ml-1 border border-primary/20';
                 badge.textContent = 'New';
@@ -106,11 +106,11 @@ export function Header(navigate) {
         btn.dataset.headerMenu = `${route || 'menu'}-menu`;
         btn.dataset.headerMenuTrigger = 'true';
         btn.dataset.headerActiveOn = `/${route || ''}/**`;
-        btn.dataset.active = route === 'image' ? 'true' : 'false';
+        btn.dataset.active = (route === 'contents' || route === 'home') ? 'true' : 'false';
         btn.className = 'inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-[13px] font-bold leading-tight transition group-hover:bg-white/5 focus:bg-white/5 text-secondary data-[active=true]:text-white active:opacity-70 hover:text-primary align-middle hover:scale-[1.02] focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary/60';
         btn.textContent = item;
 
-        if (item === 'Contests' || item === 'Popcorn 🍿' || item === 'Image') {
+        if (item === 'Popcorn 🍿' || item === 'Image') {
             const badge = document.createElement('span');
             badge.className = 'inline-flex items-center justify-center h-5 min-w-[26px] rounded-sm text-[10px] font-bold bg-primary/10 text-primary px-1 border border-primary/20';
             badge.textContent = 'New';
@@ -131,7 +131,7 @@ export function Header(navigate) {
         };
 
         // initial active state
-        setActive(item === 'Image');
+        setActive(item === 'Home');
 
         // Optional dropdowns
         let dropdown;
@@ -139,100 +139,33 @@ export function Header(navigate) {
             dropdown = document.createElement('div');
             dropdown.id = `${route}-menu`;
             dropdown.setAttribute('role', 'menu');
-            dropdown.className = 'absolute top-full left-0 mt-3 w-56 max-h-[70vh] rounded-2xl bg-[#0b0b0f]/95 border border-white/10 shadow-[0_20px_60px_rgba(0,0,0,0.45)] overflow-y-auto custom-scrollbar opacity-0 pointer-events-none translate-y-2 transition-all duration-200 backdrop-blur-xl pr-1 overscroll-contain';
+            dropdown.className = 'absolute top-full left-0 mt-3 w-[640px] max-h-[70vh] rounded-2xl bg-[#0b0b0f]/95 border border-white/10 shadow-[0_24px_70px_rgba(0,0,0,0.5)] overflow-y-auto custom-scrollbar opacity-0 pointer-events-none translate-y-2 transition-all duration-200 backdrop-blur-xl pr-2 overscroll-contain';
             dropdown.innerHTML = `
-                <div class="flex flex-col divide-y divide-white/5 py-1">
-                    <button class="flex items-center gap-3 px-4 py-3 text-left text-white text-sm font-bold border border-transparent hover:bg-white/5 hover:border-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary/60 transition" role="menuitem" data-dest="image">
-                        <span class="w-8 h-8 rounded-xl bg-primary/15 border border-primary/30 flex items-center justify-center text-[11px] font-black text-primary">AI</span>
-                        <div class="flex flex-col leading-tight">
-                            <span>Image Studio</span>
-                            <span class="text-[11px] text-secondary">Create from text prompts</span>
-                        </div>
-                    </button>
-                    <button class="flex items-center gap-3 px-4 py-3 text-left text-white text-sm font-bold border border-transparent hover:bg-white/5 hover:border-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary/60 transition" role="menuitem" data-dest="remix">
-                        <span class="w-8 h-8 rounded-xl bg-amber-300/20 border border-amber-200/40 flex items-center justify-center text-[11px] font-black text-amber-200">Fx</span>
-                        <div class="flex flex-col leading-tight">
-                            <span>Remix</span>
-                            <span class="text-[11px] text-secondary">Start from an existing asset</span>
-                        </div>
-                    </button>
-                    <button class="flex items-center gap-3 px-4 py-3 text-left text-white text-sm font-bold border border-transparent hover:bg-white/5 hover:border-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary/60 transition" role="menuitem" data-dest="upscale">
-                        <span class="w-8 h-8 rounded-xl bg-emerald-300/15 border border-emerald-200/40 flex items-center justify-center text-[11px] font-black text-emerald-200">Up</span>
-                        <div class="flex flex-col leading-tight">
-                            <span>Upscale</span>
-                            <span class="text-[11px] text-secondary">Enhance resolution</span>
-                        </div>
-                    </button>
-                    <button class="flex items-center gap-3 px-4 py-3 text-left text-white text-sm font-bold border border-transparent hover:bg-white/5 hover:border-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary/60 transition" role="menuitem" data-dest="background">
-                        <span class="w-8 h-8 rounded-xl bg-fuchsia-300/15 border border-fuchsia-200/40 flex items-center justify-center text-[11px] font-black text-fuchsia-200">Bg</span>
-                        <div class="flex flex-col leading-tight">
-                            <span>Background</span>
-                            <span class="text-[11px] text-secondary">Remove or replace</span>
-                        </div>
-                    </button>
-                    <button class="flex items-center gap-3 px-4 py-3 text-left text-white text-sm font-bold border border-transparent hover:bg-white/5 hover:border-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary/60 transition" role="menuitem" data-dest="look-transfer">
-                        <span class="w-8 h-8 rounded-xl bg-orange-300/15 border border-orange-200/40 flex items-center justify-center text-[11px] font-black text-orange-200">LT</span>
-                        <div class="flex flex-col leading-tight">
-                            <span>Style-from-Reference</span>
-                            <span class="text-[11px] text-secondary">Smart look transfer</span>
-                        </div>
-                    </button>
-                    <button class="flex items-center gap-3 px-4 py-3 text-left text-white text-sm font-bold border border-transparent hover:bg-white/5 hover:border-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary/60 transition" role="menuitem" data-dest="outpaint">
-                        <span class="w-8 h-8 rounded-xl bg-cyan-300/15 border border-cyan-200/40 flex items-center justify-center text-[11px] font-black text-cyan-200">∞</span>
-                        <div class="flex flex-col leading-tight">
-                            <span>Generative Expansion</span>
-                            <span class="text-[11px] text-secondary">Smart outpainting</span>
-                        </div>
-                    </button>
-                    <button class="flex items-center gap-3 px-4 py-3 text-left text-white text-sm font-bold border border-transparent hover:bg-white/5 hover:border-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary/60 transition" role="menuitem" data-dest="object-edit">
-                        <span class="w-8 h-8 rounded-xl bg-lime-300/15 border border-lime-200/40 flex items-center justify-center text-[11px] font-black text-lime-200">Obj</span>
-                        <div class="flex flex-col leading-tight">
-                            <span>Object Edit & Swap</span>
-                            <span class="text-[11px] text-secondary">Remove/replace/move</span>
-                        </div>
-                    </button>
-                    <button class="flex items-center gap-3 px-4 py-3 text-left text-white text-sm font-bold border border-transparent hover:bg-white/5 hover:border-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary/60 transition" role="menuitem" data-dest="prompt-edits">
-                        <span class="w-8 h-8 rounded-xl bg-rose-300/15 border border-rose-200/40 flex items-center justify-center text-[11px] font-black text-rose-200">Txt</span>
-                        <div class="flex flex-col leading-tight">
-                            <span>Edit by Text</span>
-                            <span class="text-[11px] text-secondary">Prompt-guided local edits</span>
-                        </div>
-                    </button>
-                    <button class="flex items-center gap-3 px-4 py-3 text-left text-white text-sm font-bold border border-transparent hover:bg-white/5 hover:border-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary/60 transition" role="menuitem" data-dest="reimagine">
-                        <span class="w-8 h-8 rounded-xl bg-purple-300/15 border border-purple-200/40 flex items-center justify-center text-[11px] font-black text-purple-200">R∞</span>
-                        <div class="flex flex-col leading-tight">
-                            <span>Scene Reimagining</span>
-                            <span class="text-[11px] text-secondary">Cinematic/anime/cyberpunk</span>
-                        </div>
-                    </button>
-                    <button class="flex items-center gap-3 px-4 py-3 text-left text-white text-sm font-bold border border-transparent hover:bg-white/5 hover-border-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary/60 transition" role="menuitem" data-dest="batch-look">
-                        <span class="w-8 h-8 rounded-xl bg-sky-300/15 border border-sky-200/40 flex items-center justify-center text-[11px] font-black text-sky-200">Set</span>
-                        <div class="flex flex-col leading-tight">
-                            <span>Batch Consistent Look</span>
-                            <span class="text-[11px] text-secondary">Propagate look to sets</span>
-                        </div>
-                    </button>
-                    <button class="flex items-center gap-3 px-4 py-3 text-left text-white text-sm font-bold border border-transparent hover:bg-white/5 hover:border-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary/60 transition" role="menuitem" data-dest="portrait-enhancer">
-                        <span class="w-8 h-8 rounded-xl bg-amber-200/15 border border-amber-100/40 flex items-center justify-center text-[11px] font-black text-amber-200">Prt</span>
-                        <div class="flex flex-col leading-tight">
-                            <span>Portrait Enhancer</span>
-                            <span class="text-[11px] text-secondary">Face/skin/eyes controls</span>
-                        </div>
-                    </button>
-                    <button class="flex items-center gap-3 px-4 py-3 text-left text-white text-sm font-bold border border-transparent hover:bg-white/5 hover:border-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary/60 transition" role="menuitem" data-dest="popcorn">
-                        <span class="w-8 h-8 rounded-xl bg-amber-300/20 border border-amber-200/40 flex items-center justify-center text-[11px] font-black text-amber-200">🍿</span>
-                        <div class="flex flex-col leading-tight">
-                            <span>Popcorn Comics</span>
-                            <span class="text-[11px] text-secondary">Create comic strips</span>
-                        </div>
-                    </button>
-                    <button class="flex items-center gap-3 px-4 py-3 text-left text-white text-sm font-bold border border-transparent hover:bg-white/5 hover:border-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary/60 transition" role="menuitem" data-dest="style-mix">
-                        <span class="w-8 h-8 rounded-xl bg-indigo-300/15 border border-indigo-200/40 flex items-center justify-center text-[11px] font-black text-indigo-200">St</span>
-                        <div class="flex flex-col leading-tight">
-                            <span>Style Mix</span>
-                            <span class="text-[11px] text-secondary">Blend references</span>
-                        </div>
-                    </button>
+                <div class="absolute inset-0 pointer-events-none bg-gradient-to-b from-white/6 via-transparent to-transparent rounded-2xl"></div>
+                <div class="relative grid grid-cols-2 gap-2 p-2">
+                    ${[
+                    { dest: 'image', icon: 'AI', bg: 'bg-primary/15 border-primary/30 text-primary', title: 'Image Studio', desc: 'Create from text prompts' },
+                    { dest: 'persona', icon: '🎭', bg: 'bg-pink-300/15 border-pink-200/40 text-pink-200', title: 'Persona Studio', desc: 'Face & identity lock' },
+                    { dest: 'motion', icon: '▶', bg: 'bg-violet-300/15 border-violet-200/40 text-violet-200', title: 'Motion Master', desc: 'Animate images to video' },
+                    { dest: 'brandlab', icon: 'Aa', bg: 'bg-amber-400/15 border-amber-300/40 text-amber-300', title: 'Brand Lab', desc: 'Typography & logo design' },
+                    { dest: 'remix', icon: 'Fx', bg: 'bg-amber-300/20 border-amber-200/40 text-amber-200', title: 'Remix', desc: 'Start from an existing asset' },
+                    { dest: 'upscale', icon: '4K', bg: 'bg-sky-300/15 border-sky-200/40 text-sky-200', title: 'Smart Upscaler', desc: '4K AI enhancement' },
+                    { dest: 'background', icon: 'Bg', bg: 'bg-fuchsia-300/15 border-fuchsia-200/40 text-fuchsia-200', title: 'Background', desc: 'Remove or replace' },
+                    { dest: 'style-studio', icon: '🎨', bg: 'bg-indigo-300/15 border-indigo-200/40 text-indigo-400', title: 'Style Studio', desc: 'Transfer & blend styles' },
+                    { dest: 'magic-editor', icon: '🪄', bg: 'bg-fuchsia-500/20 border-fuchsia-400/30 text-fuchsia-400', title: 'Magic Editor', desc: 'Text-guided image edits' },
+                    { dest: 'reimagine', icon: '🌌', bg: 'bg-emerald-300/15 border-emerald-200/40 text-emerald-200', title: 'Atmosphere Lab', desc: 'Scene reimagining' },
+                    { dest: 'batch-look', icon: 'Set', bg: 'bg-sky-300/15 border-sky-200/40 text-sky-200', title: 'Batch Consistent Look', desc: 'Propagate look to sets' },
+                    { dest: 'portrait-enhancer', icon: 'Prt', bg: 'bg-amber-200/15 border-amber-100/40 text-amber-200', title: 'Portrait Enhancer', desc: 'Face/skin/eyes controls' },
+                    { dest: 'popcorn', icon: '🍿', bg: 'bg-amber-300/20 border-amber-200/40 text-amber-200', title: 'Popcorn Comics', desc: 'Create comic strips' }
+                ].map(item => `
+                        <button class="flex items-center gap-3 px-4 py-3 text-left text-white text-sm font-bold border border-transparent hover:bg-white/5 hover:border-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary/60 transition rounded-xl" role="menuitem" data-dest="${item.dest}">
+                            <span class="w-8 h-8 rounded-xl ${item.bg} flex items-center justify-center text-[11px] font-black">${item.icon}</span>
+                            <div class="flex flex-col leading-tight">
+                                <span>${item.title}</span>
+                                <span class="text-[11px] text-secondary">${item.desc}</span>
+                            </div>
+                        </button>
+                    `).join('')}
                 </div>
             `;
 
@@ -260,6 +193,34 @@ export function Header(navigate) {
                             <span class="text-[11px] text-secondary">Compose and render</span>
                         </div>
                     </button>
+                    <button class="flex items-center gap-3 px-4 py-3 text-left text-white text-sm font-bold border border-transparent hover:bg-white/5 hover:border-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary/60 transition" role="menuitem" data-dest="text-to-video">
+                        <span class="w-8 h-8 rounded-xl bg-red-300/15 border border-red-200/40 flex items-center justify-center text-[11px] font-black text-red-200">🎬</span>
+                        <div class="flex flex-col leading-tight">
+                            <span>Text to Video</span>
+                            <span class="text-[11px] text-secondary">Prompt → cinematic video</span>
+                        </div>
+                    </button>
+                    <button class="flex items-center gap-3 px-4 py-3 text-left text-white text-sm font-bold border border-transparent hover:bg-white/5 hover:border-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary/60 transition" role="menuitem" data-dest="cinematic-shorts">
+                        <span class="w-8 h-8 rounded-xl bg-amber-300/15 border border-amber-200/40 flex items-center justify-center text-[11px] font-black text-amber-200">🎞️</span>
+                        <div class="flex flex-col leading-tight">
+                            <span>Cinematic Shorts</span>
+                            <span class="text-[11px] text-secondary">Multi-scene storyboard</span>
+                        </div>
+                    </button>
+                    <button class="flex items-center gap-3 px-4 py-3 text-left text-white text-sm font-bold border border-transparent hover:bg-white/5 hover:border-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary/60 transition" role="menuitem" data-dest="video-loops">
+                        <span class="w-8 h-8 rounded-xl bg-teal-300/15 border border-teal-200/40 flex items-center justify-center text-[11px] font-black text-teal-200">🔁</span>
+                        <div class="flex flex-col leading-tight">
+                            <span>Video Loops</span>
+                            <span class="text-[11px] text-secondary">Seamless backgrounds</span>
+                        </div>
+                    </button>
+                    <button class="flex items-center gap-3 px-4 py-3 text-left text-white text-sm font-bold border border-transparent hover:bg-white/5 hover:border-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary/60 transition" role="menuitem" data-dest="motion">
+                        <span class="w-8 h-8 rounded-xl bg-violet-300/15 border border-violet-200/40 flex items-center justify-center text-[11px] font-black text-violet-200">▶</span>
+                        <div class="flex flex-col leading-tight">
+                            <span>Motion Master</span>
+                            <span class="text-[11px] text-secondary">Animate images to video</span>
+                        </div>
+                    </button>
                     <button class="flex items-center gap-3 px-4 py-3 text-left text-white text-sm font-bold border border-transparent hover:bg-white/5 hover:border-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary/60 transition" role="menuitem" data-dest="popcorn">
                         <span class="w-8 h-8 rounded-xl bg-amber-300/20 border border-amber-200/40 flex items-center justify-center text-[11px] font-black text-amber-200">🍿</span>
                         <div class="flex flex-col leading-tight">
@@ -274,9 +235,7 @@ export function Header(navigate) {
                 btnEl.onclick = (e) => {
                     e.stopPropagation();
                     closeDropdown();
-                    const dest = btnEl.dataset.dest;
-                    if (dest === 'video') navigate('video');
-                    else if (dest === 'popcorn') navigate('popcorn');
+                    navigate(btnEl.dataset.dest);
                 };
             });
 
