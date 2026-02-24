@@ -3,9 +3,12 @@ export function AuthModal(onSuccess) {
     overlay.className = 'fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm px-6';
 
     const modal = document.createElement('div');
-    modal.className = 'w-full max-w-md bg-panel-bg border border-white/10 rounded-3xl p-8 shadow-3xl animate-fade-in-up';
+    modal.className = 'w-full max-w-md bg-panel-bg border border-white/10 rounded-3xl p-8 shadow-3xl animate-fade-in-up relative';
 
     modal.innerHTML = `
+        <button id="close-auth-modal" class="absolute right-4 top-4 text-white/70 hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary/60" aria-label="Close" title="Close">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+        </button>
         <div class="flex flex-col items-center text-center mb-8">
             <div class="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center border border-primary/20 shadow-glow mb-6">
                 <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#d9ff00" stroke-width="2">
@@ -26,7 +29,7 @@ export function AuthModal(onSuccess) {
                         placeholder="sk-..." 
                         class="w-full bg-black/40 border border-white/5 rounded-2xl px-5 py-4 pr-12 text-white placeholder:text-muted focus:outline-none focus:border-primary/50 transition-colors shadow-inner"
                     >
-                    <button id="toggle-key-visibility" class="absolute right-4 top-1/2 -translate-y-1/2 text-muted hover:text-white transition-colors">
+                    <button id="toggle-key-visibility" class="absolute right-4 top-1/2 -translate-y-1/2 text-muted hover:text-white transition-colors" title="Toggle visibility">
                         <svg id="eye-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
                             <circle cx="12" cy="12" r="3"/>
@@ -40,7 +43,7 @@ export function AuthModal(onSuccess) {
             </div>
 
             <div class="flex flex-col gap-3">
-                <button id="save-key-btn" class="w-full bg-primary text-black font-black py-4 rounded-2xl hover:shadow-glow hover:scale-[1.02] active:scale-[0.98] transition-all">
+                <button id="save-key-btn" class="w-full bg-primary text-black font-black py-4 rounded-2xl hover:shadow-glow hover:scale-[1.02] active:scale-[0.98] transition-all" title="Save and Initialize">
                     Initialize Studio
                 </button>
                 <a href="https://muapi.ai" target="_blank" class="text-center text-[11px] font-bold text-muted hover:text-white transition-colors py-2 uppercase tracking-tighter">
@@ -58,6 +61,16 @@ export function AuthModal(onSuccess) {
     const toggleBtn = modal.querySelector('#toggle-key-visibility');
     const eyeIcon = modal.querySelector('#eye-icon');
     const eyeOffIcon = modal.querySelector('#eye-off-icon');
+    const closeBtn = modal.querySelector('#close-auth-modal');
+
+    const dismiss = () => {
+        if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
+    };
+
+    closeBtn.onclick = dismiss;
+    overlay.addEventListener('click', (e) => {
+        if (e.target === overlay) dismiss();
+    });
 
     toggleBtn.onclick = () => {
         const isPassword = input.type === 'password';
@@ -66,11 +79,18 @@ export function AuthModal(onSuccess) {
         eyeOffIcon.classList.toggle('hidden', isPassword);
     };
 
+    input.onkeydown = (e) => {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            btn.click();
+        }
+    };
+
     btn.onclick = () => {
         const key = input.value.trim();
         if (key) {
             localStorage.setItem('muapi_key', key);
-            document.body.removeChild(overlay);
+            dismiss();
             if (onSuccess) onSuccess();
         } else {
             input.classList.add('border-red-500/50');
