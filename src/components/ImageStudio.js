@@ -3,6 +3,19 @@ import { t2iModels, getAspectRatiosForModel } from '../lib/models.js';
 import { AuthModal } from './AuthModal.js';
 import { toast } from '../lib/Toast.js';
 
+const SAMPLE_PROMPTS = [
+    "A futuristic cyberpunk city with neon lights and flying cars, rain-slicked streets, 8k resolution, cinematic lighting",
+    "A cozy wooden cabin in a snowy forest at sunset, smoke rising from the chimney, warm interior glow, hyper-realistic",
+    "An ethereal underwater kingdom with glowing jellyfish, coral reefs, and ancient ruins, vibrant colors, dreamlike",
+    "A majestic dragon perched on a mountain peak, breathing golden fire, dramatic clouds and lightning, epic fantasy style",
+    "A minimalist interior design of a modern living room, floor-to-ceiling windows with a view of a tranquil lake, soft natural light",
+    "A surreal landscape where mountains are made of giant crystals and the sky is a swirling galaxy, psychedelic colors",
+    "A vintage 1950s diner at night, neon signs flickering, classic cars parked outside, cinematic film noir aesthetic",
+    "A tiny mouse wearing a suit and hat, standing in a library made of books, intricate details, whimsical style",
+    "A high-speed action shot of a professional dancer performing in a spray of colorful dust, dynamic lighting, high contrast",
+    "A peaceful zen garden with a small waterfall, mossy rocks, and cherry blossom petals falling, 4k, serene atmosphere"
+];
+
 export function ImageStudio() {
     const container = document.createElement('div');
     container.className = 'w-full h-full flex flex-col items-center justify-center bg-app-bg relative p-4 md:p-6 overflow-y-auto custom-scrollbar overflow-x-hidden';
@@ -21,6 +34,13 @@ export function ImageStudio() {
     const defaultModel = t2iModels[0];
     let selectedModel = defaultModel.id;
     let selectedModelName = defaultModel.name;
+    let currentModel = 'muapi-flux-pro';
+    let currentAspectRatio = '1:1';
+    let isHistoryCollapsed = localStorage.getItem('hist_collapsed') === 'true';
+
+    if (isHistoryCollapsed) {
+        container.classList.add('sidebar-collapsed');
+    }
     let selectedAr = '1:1';
     let dropdownOpen = null;
 
@@ -83,28 +103,64 @@ export function ImageStudio() {
     promptWrapper.style.animationDelay = '0.2s';
 
     const bar = document.createElement('div');
-    bar.className = 'w-full bg-[#111]/90 backdrop-blur-xl border border-white/10 rounded-[1.5rem] md:rounded-[2.5rem] p-3 md:p-5 flex flex-col gap-3 md:gap-5 shadow-[0_20px_50px_rgba(0,0,0,0.5)] transition-all duration-300';
+    bar.className = 'w-full glass rounded-[2rem] p-4 md:p-6 flex flex-col gap-4 shadow-4xl transition-all duration-300 border-white/5 focus-within:border-primary/30';
 
     // Top Row: Input
     const topRow = document.createElement('div');
-    topRow.className = 'flex items-start gap-5 px-2';
+    topRow.className = 'relative flex items-center gap-3 px-1';
 
     const textarea = document.createElement('textarea');
-    textarea.placeholder = 'Describe the scene you imagine';
-    textarea.className = 'flex-1 bg-transparent border-none text-white text-base md:text-xl placeholder:text-muted focus:outline-none resize-none pt-2.5 leading-relaxed min-h-[40px] max-h-[150px] md:max-h-[250px] overflow-y-auto custom-scrollbar';
+    textarea.placeholder = 'Describe the scene you imagine...';
+    textarea.className = 'flex-1 bg-transparent border-none text-white text-base md:text-xl placeholder:text-muted focus:outline-none resize-none py-1 leading-relaxed min-h-[40px] max-h-[150px] md:max-h-[250px] overflow-y-auto custom-scrollbar pr-10';
     textarea.rows = 1;
     textarea.oninput = () => {
         textarea.style.height = 'auto';
         const maxHeight = window.innerWidth < 768 ? 150 : 250;
         textarea.style.height = Math.min(textarea.scrollHeight, maxHeight) + 'px';
     };
+    textarea.onkeydown = (e) => {
+        if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+            e.preventDefault();
+            generateBtn.click();
+        }
+    };
 
-    topRow.appendChild(textarea);
+    const clearPromptBtn = document.createElement('button');
+    clearPromptBtn.className = 'clear-prompt-btn absolute right-0 top-1/2 -translate-y-1/2 text-muted hover:text-white opacity-0 group-hover:opacity-100 transition-all p-1';
+    clearPromptBtn.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>`;
+    clearPromptBtn.title = 'Clear prompt';
+    clearPromptBtn.onclick = (e) => {
+        e.stopPropagation();
+        textarea.value = '';
+        textarea.dispatchEvent(new Event('input'));
+        textarea.focus();
+    };
+
+    const promptInputContainer = document.createElement('div');
+    promptInputContainer.className = 'flex-1 relative group flex items-center';
+    promptInputContainer.appendChild(textarea);
+    promptInputContainer.appendChild(clearPromptBtn);
+
+    topRow.appendChild(promptInputContainer);
+
+    const surpriseBtn = document.createElement('button');
+    surpriseBtn.className = 'text-muted hover:text-white transition-all flex items-center justify-center w-8 h-8 rounded-lg hover:bg-white/10 shrink-0';
+    surpriseBtn.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87L18.18 22 12 18.27 5.82 22 7 14.14l-5-4.87 6.91-1.01L12 2z"/></svg>`;
+    surpriseBtn.title = 'Surprise Me';
+    surpriseBtn.onclick = () => {
+        const randomPrompt = SAMPLE_PROMPTS[Math.floor(Math.random() * SAMPLE_PROMPTS.length)];
+        textarea.value = randomPrompt;
+        textarea.dispatchEvent(new Event('input'));
+        textarea.focus();
+        toast.info('New creative prompt loaded ✨');
+    };
+    topRow.appendChild(surpriseBtn);
+
     bar.appendChild(topRow);
 
     // Bottom Row: Controls
     const bottomRow = document.createElement('div');
-    bottomRow.className = 'flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 px-2 pt-4 border-t border-white/5';
+    bottomRow.className = 'flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 border-t border-white/5 pt-3 mt-1';
 
     const controlsLeft = document.createElement('div');
     controlsLeft.className = 'flex items-center gap-1.5 md:gap-2.5 relative overflow-x-auto no-scrollbar pb-1 md:pb-0';
@@ -145,18 +201,19 @@ export function ImageStudio() {
     qualityBtn.style.display = hasInitialRes ? 'flex' : 'none';
 
     const generateBtn = document.createElement('button');
-    generateBtn.className = 'px-6 md:px-8 py-3 md:py-3.5 rounded-xl md:rounded-[1.5rem] font-black text-sm md:text-base transition-all flex items-center justify-center gap-2.5 w-full sm:w-auto shadow-[0_10px_40px_rgba(0,0,0,0.35)] bg-gradient-to-r from-primary via-amber-300 to-lime-300 text-black hover:scale-105 active:scale-95 hover:shadow-[0_15px_45px_rgba(0,0,0,0.45)]';
+    generateBtn.className = 'px-6 md:px-8 py-2.5 md:py-3 rounded-xl md:rounded-2xl font-black text-sm md:text-base transition-all flex items-center justify-center gap-2.5 w-full sm:w-auto shadow-[0_10px_40px_rgba(0,0,0,0.35)] bg-gradient-to-r from-primary via-amber-300 to-lime-300 text-black hover:scale-105 active:scale-95 hover:shadow-[0_15px_45px_rgba(0,0,0,0.45)]';
     generateBtn.innerHTML = `Generate ✨`;
+    generateBtn.title = 'Generate image (Ctrl+Enter)';
 
     // Focus effects
     textarea.addEventListener('focus', () => {
-        bar.classList.add('shadow-glow', 'border-primary/50');
-        bar.classList.remove('border-white/10');
+        bar.classList.add('shadow-primary/5', 'border-primary/20');
+        bar.classList.remove('border-white/5');
     });
 
     textarea.addEventListener('blur', () => {
-        bar.classList.remove('shadow-glow', 'border-primary/50');
-        bar.classList.add('border-white/10');
+        bar.classList.remove('shadow-primary/5', 'border-primary/20');
+        bar.classList.add('border-white/5');
     });
 
     bottomRow.appendChild(controlsLeft);
@@ -341,36 +398,77 @@ export function ImageStudio() {
     historySidebar.id = 'history-sidebar';
 
     const historyHeader = document.createElement('div');
-    historyHeader.className = 'flex flex-col items-center mb-2';
+    historyHeader.className = 'flex flex-col items-center mb-2 w-full px-2';
 
     const historyLabel = document.createElement('div');
-
-    historyLabel.className = 'text-[9px] font-bold text-muted uppercase tracking-widest rotate-0';
     historyLabel.className = 'text-[9px] font-bold text-muted uppercase tracking-widest mb-2';
     historyLabel.textContent = 'History';
+
+    const historySearch = document.createElement('div');
+    historySearch.className = 'w-full mb-3 relative group';
+    historySearch.innerHTML = `
+        <input type="text" id="hist-search-input" placeholder="Search..." class="w-full bg-white/5 border border-white/10 rounded-lg py-1.5 px-7 text-[10px] text-white focus:outline-none focus:border-primary/40 transition-all placeholder:text-muted/50">
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" class="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted/50 group-focus-within:text-primary/70 transition-colors"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+    `;
+
+    let historySearchQuery = '';
+    const histSearchInput = historySearch.querySelector('#hist-search-input');
+    histSearchInput.oninput = () => {
+        historySearchQuery = histSearchInput.value.toLowerCase();
+        renderHistory();
+    };
 
     const clearHistoryBtn = document.createElement('button');
     clearHistoryBtn.className = 'text-[8px] font-black text-primary/40 hover:text-primary uppercase tracking-tighter mt-1 transition-colors';
     clearHistoryBtn.textContent = 'Clear All';
     clearHistoryBtn.onclick = () => {
-        if (confirm('Clear all generation history?')) {
-            generationHistory.length = 0;
-            localStorage.removeItem('muapi_history');
+        if (confirm('Clear all generations?')) {
+            generationHistory = [];
+            localStorage.setItem('muapi_history', JSON.stringify([]));
             renderHistory();
-            historySidebar.classList.add('translate-x-full', 'opacity-0');
-            historySidebar.classList.remove('translate-x-0', 'opacity-100');
         }
     };
 
+    const favoritesToggle = document.createElement('button');
+    let showFavoritesOnly = false;
+    favoritesToggle.className = 'text-[8px] font-black text-muted hover:text-white uppercase tracking-tighter mt-1 transition-colors flex items-center gap-1';
+    favoritesToggle.innerHTML = `
+        <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87L18.18 22 12 18.27 5.82 22 7 14.14l-5-4.87 6.91-1.01L12 2z"/></svg>
+        <span>Show Favorites</span>
+    `;
+    favoritesToggle.onclick = () => {
+        showFavoritesOnly = !showFavoritesOnly;
+        favoritesToggle.classList.toggle('text-primary', showFavoritesOnly);
+        favoritesToggle.classList.toggle('text-muted', !showFavoritesOnly);
+        renderHistory();
+    };
+
     historyHeader.appendChild(historyLabel);
+    historyHeader.appendChild(historySearch);
+    historyHeader.appendChild(favoritesToggle);
     historyHeader.appendChild(clearHistoryBtn);
-    historySidebar.appendChild(historyHeader);
 
     const historyList = document.createElement('div');
     historyList.className = 'flex flex-col gap-2 w-full px-2';
     historySidebar.appendChild(historyList);
 
     container.appendChild(historySidebar);
+
+    const toggleSidebarBtn = document.createElement('button');
+    toggleSidebarBtn.className = 'sidebar-toggle-btn fixed right-6 bottom-6 z-[60] w-12 h-12 bg-panel-bg border border-white/10 rounded-2xl flex items-center justify-center text-secondary hover:text-primary hover:border-primary/30 shadow-2xl backdrop-blur-md';
+    toggleSidebarBtn.innerHTML = `
+        <svg id="toggle-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="${isHistoryCollapsed ? 'M15 18l-6-6 6-6' : 'M9 18l6-6-6-6'}"/>
+        </svg>
+    `;
+    toggleSidebarBtn.title = 'Toggle History Sidebar';
+    toggleSidebarBtn.onclick = () => {
+        isHistoryCollapsed = !isHistoryCollapsed;
+        container.classList.toggle('sidebar-collapsed', isHistoryCollapsed);
+        localStorage.setItem('hist_collapsed', isHistoryCollapsed);
+        toggleSidebarBtn.querySelector('path').setAttribute('d', isHistoryCollapsed ? 'M15 18l-6-6 6-6' : 'M9 18l6-6-6-6');
+    };
+    container.appendChild(toggleSidebarBtn);
 
     const canvas = document.createElement('div');
     canvas.className = 'absolute inset-0 flex flex-col items-center justify-center p-4 min-[800px]:p-16 z-10 opacity-0 pointer-events-none transition-all duration-1000 translate-y-10 scale-95';
@@ -399,7 +497,8 @@ export function ImageStudio() {
 
     const copyPromptBtn = document.createElement('button');
     copyPromptBtn.className = 'bg-white/10 hover:bg-white/20 px-6 py-2.5 rounded-2xl text-xs font-bold transition-all border border-white/5 backdrop-blur-lg text-white';
-    copyPromptBtn.textContent = '📋 Copy Prompt';
+    copyPromptBtn.textContent = '📋 Prompt';
+    copyPromptBtn.title = 'Copy generation prompt';
     copyPromptBtn.onclick = async () => {
         const current = resultImg.src;
         const entry = generationHistory.find(e => e.url === current);
@@ -419,8 +518,31 @@ export function ImageStudio() {
         }
     };
 
+    const copyLinkBtn = document.createElement('button');
+    copyLinkBtn.className = 'bg-white/10 hover:bg-white/20 px-6 py-2.5 rounded-2xl text-xs font-bold transition-all border border-white/5 backdrop-blur-lg text-white';
+    copyLinkBtn.textContent = '🔗 Link';
+    copyLinkBtn.title = 'Copy image URL';
+    copyLinkBtn.onclick = async () => {
+        const current = resultImg.src;
+        if (current) {
+            try {
+                await navigator.clipboard.writeText(current);
+                const originalText = copyLinkBtn.textContent;
+                copyLinkBtn.textContent = '✓ Copied!';
+                copyLinkBtn.classList.add('text-primary');
+                setTimeout(() => {
+                    copyLinkBtn.textContent = originalText;
+                    copyLinkBtn.classList.remove('text-primary');
+                }, 2000);
+            } catch (err) {
+                console.error('Failed to copy link', err);
+            }
+        }
+    };
+
     canvasControls.appendChild(regenerateBtn);
     canvasControls.appendChild(copyPromptBtn);
+    canvasControls.appendChild(copyLinkBtn);
     canvasControls.appendChild(downloadBtn);
     canvasControls.appendChild(newPromptBtn);
 
@@ -442,7 +564,15 @@ export function ImageStudio() {
     };
 
     const addToHistory = (entry) => {
-        generationHistory.unshift(entry);
+        // Ensure consistent structure
+        const normalizedEntry = {
+            ...entry,
+            settings: entry.settings || {
+                model: entry.model,
+                aspect_ratio: entry.aspect_ratio
+            }
+        };
+        generationHistory.unshift(normalizedEntry);
         localStorage.setItem('muapi_history', JSON.stringify(generationHistory.slice(0, 50)));
 
         historySidebar.classList.remove('translate-x-full', 'opacity-0');
@@ -453,13 +583,50 @@ export function ImageStudio() {
 
     const renderHistory = () => {
         historyList.innerHTML = '';
-        generationHistory.forEach((entry, idx) => {
-            const thumb = document.createElement('div');
-            thumb.className = `relative group/thumb cursor-pointer rounded-xl overflow-hidden border-2 transition-all duration-300 ${idx === 0 ? 'border-primary shadow-glow' : 'border-white/10 hover:border-white/30'}`;
 
-            thumb.innerHTML = `
-                <img src="${entry.url}" alt="${entry.prompt?.substring(0, 30) || 'Generated'}" class="w-full aspect-square object-cover">
-                <div class="absolute inset-0 bg-black/60 opacity-0 group-hover/thumb:opacity-100 transition-opacity flex flex-col items-center justify-center gap-2">
+        const filteredHistory = historySearchQuery
+            ? generationHistory.filter(h => h.prompt.toLowerCase().includes(historySearchQuery))
+            : generationHistory;
+
+        const finalHistory = showFavoritesOnly
+            ? filteredHistory.filter(h => h.isFavorite)
+            : filteredHistory;
+
+        if (finalHistory.length === 0) {
+            const empty = document.createElement('div');
+            empty.className = 'text-[8px] text-muted text-center py-4';
+            empty.textContent = showFavoritesOnly ? 'No favorites yet' : (historySearchQuery ? 'No matches found' : 'No history yet');
+            historyList.appendChild(empty);
+            return;
+        }
+
+        finalHistory.forEach((entry, idx) => {
+            const thumb = document.createElement('div');
+            thumb.className = `relative group/thumb cursor-pointer rounded-xl overflow-hidden border-2 transition-all duration-300 skeleton-loader ${idx === 0 && !historySearchQuery && !showFavoritesOnly ? 'border-primary shadow-glow' : 'border-white/10 hover:border-white/30'}`;
+
+            const img = document.createElement('img');
+            img.src = entry.url;
+            img.className = 'w-full aspect-square object-cover opacity-0 transition-opacity duration-300';
+            img.onload = () => {
+                img.classList.remove('opacity-0');
+                thumb.classList.remove('skeleton-loader');
+            };
+
+            const favBtn = document.createElement('button');
+            favBtn.className = `hist-favorite p-1.5 rounded-lg bg-black/60 backdrop-blur-md border border-white/10 ${entry.isFavorite ? 'is-active' : ''}`;
+            favBtn.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="${entry.isFavorite ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2.5"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87L18.18 22 12 18.27 5.82 22 7 14.14l-5-4.87 6.91-1.01L12 2z"/></svg>`;
+            favBtn.title = entry.isFavorite ? 'Unfavorite' : 'Favorite';
+            favBtn.onclick = (e) => {
+                e.stopPropagation();
+                entry.isFavorite = !entry.isFavorite;
+                localStorage.setItem('muapi_history', JSON.stringify(generationHistory));
+                renderHistory();
+                toast.info(entry.isFavorite ? 'Added to favorites ⭐' : 'Removed from favorites');
+            };
+
+            const overlay = document.createElement('div');
+            overlay.className = 'absolute inset-0 bg-black/60 opacity-0 group-hover/thumb:opacity-100 transition-opacity flex flex-col items-center justify-center gap-2';
+            overlay.innerHTML = `
                     <div class="flex gap-1">
                         <button class="hist-copy p-1.5 bg-white/10 rounded-lg text-white hover:bg-white/20 transition-all" title="Copy Prompt">
                             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
@@ -468,11 +635,17 @@ export function ImageStudio() {
                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 2v6h-6"/><path d="M3 12a9 9 0 0 1 15-6.7L21 8"/><path d="M3 22v-6h6"/><path d="M21 12a9 9 0 0 1-15 6.7L3 16"/></svg>
                         </button>
                     </div>
+                    <button class="hist-delete p-1.5 bg-black/40 hover:bg-red-500/80 rounded-lg text-white/70 hover:text-white transition-all backdrop-blur-sm border border-white/10" title="Delete">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                    </button>
                     <button class="hist-download p-1.5 bg-primary rounded-lg text-black hover:scale-110 transition-transform" title="Download">
                         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
                     </button>
-                </div>
-            `;
+                `;
+
+            thumb.appendChild(img);
+            thumb.appendChild(favBtn);
+            thumb.appendChild(overlay);
 
             thumb.onclick = (e) => {
                 if (e.target.closest('.hist-download')) {
@@ -481,14 +654,47 @@ export function ImageStudio() {
                 }
                 if (e.target.closest('.hist-copy')) {
                     navigator.clipboard.writeText(entry.prompt);
+                    const btn = e.target.closest('.hist-copy');
+                    const originalHTML = btn.innerHTML;
+                    btn.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#d9ff00" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>';
                     toast.success('Prompt copied to clipboard');
+                    setTimeout(() => { btn.innerHTML = originalHTML; }, 2000);
+                    return;
+                }
+                if (e.target.closest('.hist-delete')) {
+                    if (confirm('Delete this from history?')) {
+                        generationHistory.splice(idx, 1);
+                        localStorage.setItem('muapi_history', JSON.stringify(generationHistory));
+                        renderHistory();
+                        if (generationHistory.length === 0) {
+                            historySidebar.classList.add('translate-x-full', 'opacity-0');
+                        }
+                    }
                     return;
                 }
                 if (e.target.closest('.hist-remix')) {
                     textarea.value = entry.prompt;
                     textarea.focus();
                     textarea.dispatchEvent(new Event('input'));
-                    toast.info('Prompt loaded for remix');
+
+                    // Smart Remix: Restore model and aspect ratio
+                    const settings = entry.settings || { model: entry.model, aspect_ratio: entry.aspect_ratio };
+                    if (settings.model) {
+                        selectedModel = settings.model;
+                        const model = t2iModels.find(m => m.id === selectedModel);
+                        if (model) {
+                            selectedModelName = model.name;
+                            const label = document.getElementById('model-btn-label');
+                            if (label) label.textContent = selectedModelName;
+                        }
+                    }
+                    if (settings.aspect_ratio) {
+                        selectedAr = settings.aspect_ratio;
+                        const label = document.getElementById('ar-btn-label');
+                        if (label) label.textContent = selectedAr;
+                    }
+
+                    toast.info('Settings and prompt loaded for remix ✨');
                     return;
                 }
                 showImageInCanvas(entry.url);
@@ -620,6 +826,26 @@ export function ImageStudio() {
                 if (data.prompt) {
                     textarea.value = data.prompt;
                     textarea.dispatchEvent(new Event('input'));
+
+                    // Smart Remix: Restore model and aspect ratio
+                    const settings = data.settings || { model: data.model, aspect_ratio: data.aspect_ratio };
+                    if (settings.model) {
+                        selectedModel = settings.model;
+                        const model = t2iModels.find(m => m.id === selectedModel);
+                        if (model) {
+                            selectedModelName = model.name;
+                            const label = document.getElementById('model-btn-label');
+                            if (label) label.textContent = selectedModelName;
+                        }
+                    }
+                    if (settings.aspect_ratio) {
+                        selectedAr = settings.aspect_ratio;
+                        const label = document.getElementById('ar-btn-label');
+                        if (label) label.textContent = selectedAr;
+                    }
+                }
+                if (data.url) {
+                    showImageInCanvas(data.url);
                 }
                 localStorage.removeItem('remixData');
             } catch (e) {
