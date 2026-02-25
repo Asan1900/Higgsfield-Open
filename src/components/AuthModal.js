@@ -82,6 +82,11 @@ export function AuthModal(onSuccess) {
         if (e.target === overlay) dismiss();
     });
 
+    const onKeyDown = (e) => {
+        if (e.key === 'Escape') {
+            dismiss();
+        }
+    };
     document.addEventListener('keydown', onKeyDown);
 
     toggleBtn.onclick = () => {
