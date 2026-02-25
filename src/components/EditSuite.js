@@ -259,7 +259,7 @@ export function EditSuite(opts = {}) {
             if (activeMode === 'upscale') {
                 // Upscale doesn't need mask
                 const result = await muapi.generateImage({
-                    model: 'aura-sr',
+                    model: 'flux-schnell',
                     prompt: prompt,
                     image_url: imageDataUrl
                 });
@@ -267,7 +267,7 @@ export function EditSuite(opts = {}) {
             } else {
                 // In-paint / Out-paint
                 const result = await muapi.generateImage({
-                    model: 'flux-general',
+                    model: 'flux-schnell',
                     prompt: prompt,
                     image_url: imageDataUrl,
                     strength: activeMode === 'inpaint' ? 0.8 : 0.6

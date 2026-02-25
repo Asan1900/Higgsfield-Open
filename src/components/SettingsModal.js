@@ -30,7 +30,7 @@ export function SettingsModal(onClose) {
                         class="w-full bg-black/40 border border-white/5 rounded-2xl px-5 py-4 pr-12 text-white placeholder:text-muted focus:outline-none focus:border-primary/50 transition-colors shadow-inner"
                         value="${localStorage.getItem('muapi_key') || ''}"
                     >
-                    <button id="toggle-settings-visibility" class="absolute right-4 top-1/2 -translate-y-1/2 text-muted hover:text-white transition-colors">
+                    <button id="toggle-settings-visibility" class="absolute right-4 top-1/2 -translate-y-1/2 text-muted hover:text-white transition-colors" title="Toggle visibility">
                         <svg id="eye-icon-settings" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
                             <circle cx="12" cy="12" r="3"/>
@@ -45,10 +45,10 @@ export function SettingsModal(onClose) {
             </div>
 
             <div class="flex gap-3">
-                <button id="cancel-settings-btn" class="flex-1 bg-white/5 text-white font-bold py-4 rounded-2xl hover:bg-white/10 transition-all border border-white/5">
+                <button id="cancel-settings-btn" class="flex-1 bg-white/5 text-white font-bold py-4 rounded-2xl hover:bg-white/10 transition-all border border-white/5" title="Close without saving">
                     Cancel
                 </button>
-                <button id="save-settings-btn" class="flex-1 bg-primary text-black font-black py-4 rounded-2xl hover:shadow-glow hover:scale-[1.02] active:scale-[0.98] transition-all">
+                <button id="save-settings-btn" class="flex-1 bg-primary text-black font-black py-4 rounded-2xl hover:shadow-glow hover:scale-[1.02] active:scale-[0.98] transition-all" title="Save API Key">
                     Save Changes
                 </button>
             </div>
@@ -70,6 +70,13 @@ export function SettingsModal(onClose) {
         input.type = isPassword ? 'text' : 'password';
         eyeIcon.classList.toggle('hidden', !isPassword);
         eyeOffIcon.classList.toggle('hidden', isPassword);
+    };
+
+    input.onkeydown = (e) => {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            saveBtn.click();
+        }
     };
 
     const close = () => {

@@ -28,6 +28,7 @@ export function AuthModal(onSuccess) {
                         id="muapi-key-input"
                         placeholder="sk-..." 
                         class="w-full bg-black/40 border border-white/5 rounded-2xl px-5 py-4 pr-12 text-white placeholder:text-muted focus:outline-none focus:border-primary/50 transition-colors shadow-inner"
+                        autofocus
                     >
                     <button id="toggle-key-visibility" class="absolute right-4 top-1/2 -translate-y-1/2 text-muted hover:text-white transition-colors" title="Toggle visibility">
                         <svg id="eye-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -40,6 +41,7 @@ export function AuthModal(onSuccess) {
                         </svg>
                     </button>
                 </div>
+                <p class="text-[11px] text-muted flex items-center gap-2 pl-1"><span class="inline-flex h-5 w-5 items-center justify-center rounded-md border border-white/10 bg-white/5 text-[10px]">⌘V</span> Paste from clipboard or press Enter to submit</p>
             </div>
 
             <div class="flex flex-col gap-3">
@@ -63,7 +65,15 @@ export function AuthModal(onSuccess) {
     const eyeOffIcon = modal.querySelector('#eye-off-icon');
     const closeBtn = modal.querySelector('#close-auth-modal');
 
+    const onKeyDown = (e) => {
+        if (e.key === 'Escape') {
+            dismiss();
+        }
+    };
+
+    const cleanup = () => document.removeEventListener('keydown', onKeyDown);
     const dismiss = () => {
+        cleanup();
         if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
     };
 
@@ -105,9 +115,11 @@ export function AuthModal(onSuccess) {
         }
     };
 
-    const cleanup = () => document.removeEventListener('keydown', onKeyDown);
-    overlay.addEventListener('transitionend', cleanup);
-    overlay.addEventListener('DOMNodeRemoved', cleanup);
+    // Focus the input on open for quick paste
+    requestAnimationFrame(() => {
+        input.focus();
+        input.select();
+    });
 
     return overlay;
 }

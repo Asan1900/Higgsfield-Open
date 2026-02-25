@@ -61,8 +61,9 @@ export function MediaLibrary({ onAddToTimeline } = {}) {
     };
 
     const clearBtn = document.createElement('button');
-    clearBtn.className = 'ml-import-btn opacity-50 hover:opacity-100 hover:text-primary transition-all ml-1';
-    clearBtn.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg> Clear`;
+    clearBtn.className = 'ml-import-btn opacity-50 hover:opacity-100 hover:text-red-500 transition-all ml-1';
+    clearBtn.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg> Clear All`;
+    clearBtn.title = 'Clear all generated assets from the library';
     clearBtn.onclick = () => {
         if (confirm('Clear all generated assets from the library?')) {
             localStorage.removeItem('cinema_history');
@@ -163,7 +164,7 @@ export function MediaLibrary({ onAddToTimeline } = {}) {
                     <polyline points="21 15 16 10 5 21"/>
                 </svg>
                 <span class="text-[10px] text-white/20">No assets yet</span>
-                <span class="text-[9px] text-white/10 mt-1">Generate content in Cinema Studio</span>
+                <span class="text-[9px] text-white/10 mt-1">Generate content in Image or Cinema Studio</span>
             `;
             gridSection.appendChild(empty);
             return;
@@ -302,7 +303,43 @@ export function MediaLibrary({ onAddToTimeline } = {}) {
         // Hover overlay
         const overlay = document.createElement('div');
         overlay.className = 'ml-asset-overlay';
-        overlay.innerHTML = `<span class="text-[8px] font-bold text-white uppercase">Drag to Timeline</span>`;
+        overlay.innerHTML = `
+            <span class="text-[8px] font-bold text-white uppercase mb-4 pointer-events-none">Drag to Timeline</span>
+            <div class="flex gap-2">
+                <button class="ml-item-delete p-1.5 bg-black/40 hover:bg-red-500/80 rounded-lg text-white/70 hover:text-white transition-all backdrop-blur-sm border border-white/10" title="Delete Asset">
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                </button>
+                <button class="ml-item-copy p-1.5 bg-black/40 hover:bg-primary/80 rounded-lg text-white/70 hover:text-black transition-all backdrop-blur-sm border border-white/10" title="Copy Link">
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+                </button>
+                <button class="ml-item-download p-1.5 bg-black/40 hover:bg-primary rounded-lg text-white/70 hover:text-black transition-all backdrop-blur-sm border border-white/10" title="Download Asset">
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+                </button>
+            </div>
+        `;
+
+        overlay.querySelector('.ml-item-delete').onclick = (e) => {
+            e.stopPropagation();
+            if (confirm('Delete this asset?')) {
+                deleteAsset(asset.id);
+            }
+        };
+
+        overlay.querySelector('.ml-item-copy').onclick = (e) => {
+            e.stopPropagation();
+            if (asset.url) {
+                navigator.clipboard.writeText(asset.url);
+                import('../lib/Toast.js').then(({ toast }) => toast.success('Link copied to clipboard'));
+            }
+        };
+
+        overlay.querySelector('.ml-item-download').onclick = (e) => {
+            e.stopPropagation();
+            if (asset.url) {
+                downloadFile(asset.url, `asset-${asset.id}.jpg`);
+            }
+        };
+
         thumb.appendChild(overlay);
 
         item.appendChild(thumb);
@@ -314,6 +351,37 @@ export function MediaLibrary({ onAddToTimeline } = {}) {
         item.appendChild(label);
 
         return item;
+    }
+
+    function deleteAsset(id) {
+        try {
+            const history = JSON.parse(localStorage.getItem('cinema_history') || '[]');
+            const updated = history.filter((_, idx) => idx !== id); // Using index as ID in getStoredAssets
+            localStorage.setItem('cinema_history', JSON.stringify(updated));
+            renderGrid();
+        } catch (e) {
+            console.error('Error deleting asset', e);
+        }
+    }
+
+    async function downloadFile(url, filename) {
+        try {
+            import('../lib/Toast.js').then(({ toast }) => toast.info('Starting download...'));
+            const response = await fetch(url);
+            const blob = await response.blob();
+            const blobUrl = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = blobUrl;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(blobUrl);
+            import('../lib/Toast.js').then(({ toast }) => toast.success('Downloaded successfully'));
+        } catch (err) {
+            window.open(url, '_blank');
+            import('../lib/Toast.js').then(({ toast }) => toast.error('Direct download failed. Opened in new tab.'));
+        }
     }
 
     function getStoredAssets() {

@@ -36,20 +36,23 @@ function setLoading(isLoading) {
 // Router
 async function navigate(page, context) {
   if (!contentArea) return;
-  
+
   setLoading(true);
-  
+
   // Clean up previous content if it has a cleanup function
   const oldContent = contentArea.firstChild;
   if (oldContent && oldContent._cleanup) {
-    try { oldContent._cleanup(); } catch (e) { console.warn('Cleanup error:', e); }
+    try { oldContent._cleanup(); } catch (e) { /* Cleanup error ignored */ }
   }
 
   contentArea.innerHTML = '';
   pendingContext = context || null;
 
   try {
-    if (page === 'image') {
+    if (page === 'contents') {
+      const { Contents } = await import('./components/Contents.js');
+      contentArea.appendChild(Contents());
+    } else if (page === 'image') {
       contentArea.appendChild(ImageStudio());
     } else if (page === 'video') {
       const { VideoStudio } = await import('./components/VideoStudio.js');
@@ -82,21 +85,12 @@ async function navigate(page, context) {
     } else if (page === 'background') {
       const { Background } = await import('./components/Background.js');
       contentArea.appendChild(Background());
-    } else if (page === 'style-mix') {
-      const { StyleMix } = await import('./components/StyleMix.js');
-      contentArea.appendChild(StyleMix());
-    } else if (page === 'look-transfer') {
-      const { LookTransfer } = await import('./components/LookTransfer.js');
-      contentArea.appendChild(LookTransfer());
     } else if (page === 'outpaint') {
       const { Outpaint } = await import('./components/Outpaint.js');
       contentArea.appendChild(Outpaint());
-    } else if (page === 'object-edit') {
-      const { ObjectEdit } = await import('./components/ObjectEdit.js');
-      contentArea.appendChild(ObjectEdit());
-    } else if (page === 'prompt-edits') {
-      const { PromptEdits } = await import('./components/PromptEdits.js');
-      contentArea.appendChild(PromptEdits());
+    } else if (page === 'magic-editor') {
+      const { MagicEditor } = await import('./components/MagicEditor.js');
+      contentArea.appendChild(MagicEditor());
     } else if (page === 'reimagine') {
       const { Reimagine } = await import('./components/Reimagine.js');
       contentArea.appendChild(Reimagine());
@@ -106,23 +100,51 @@ async function navigate(page, context) {
     } else if (page === 'portrait-enhancer') {
       const { PortraitEnhancer } = await import('./components/PortraitEnhancer.js');
       contentArea.appendChild(PortraitEnhancer());
+    } else if (page === 'persona') {
+      const { PersonaStudio } = await import('./components/PersonaStudio.js');
+      contentArea.appendChild(PersonaStudio());
+    } else if (page === 'motion') {
+      const { MotionMaster } = await import('./components/MotionMaster.js');
+      contentArea.appendChild(MotionMaster());
+    } else if (page === 'brandlab') {
+      const { BrandLab } = await import('./components/BrandLab.js');
+      contentArea.appendChild(BrandLab());
+    } else if (page === 'text-to-video') {
+      const { TextToVideo } = await import('./components/TextToVideo.js');
+      contentArea.appendChild(TextToVideo());
+    } else if (page === 'cinematic-shorts') {
+      const { CinematicShorts } = await import('./components/CinematicShorts.js');
+      contentArea.appendChild(CinematicShorts());
+    } else if (page === 'video-loops') {
+      const { VideoLoops } = await import('./components/VideoLoops.js');
+      contentArea.appendChild(VideoLoops());
+    } else if (page === 'style-studio') {
+      const { StyleStudio } = await import('./components/StyleStudio.js');
+      contentArea.appendChild(StyleStudio());
     } else {
-      // Coming Soon / Fallback pages
-      const titles = {
-        'contests': 'Contests',
-        'ai-influencer': 'AI Influencer',
-        'apps': 'Apps',
-        'assist': 'Assist',
-        'community': 'Community',
-        'remix': 'Remix',
-        'upscale': 'Upscale',
-        'background': 'Background',
-        'style-mix': 'Style Mix'
-      };
-      const title = titles[page] || 'Coming Soon';
-      contentArea.appendChild(ComingSoon(title));
-    }
+      // DEFAULT FALLBACK: If page is unknown or 'contents', show the Hub
+      const { Contents } = await import('./components/Contents.js');
+      contentArea.appendChild(Contents());
 
+      // Still show Coming Soon for specific non-implemented items if explicitly requested
+      if (page && page !== 'contents' && page !== 'home') {
+        const titles = {
+          'contests': 'Contests',
+          'ai-influencer': 'AI Influencer',
+          'apps': 'Apps',
+          'assist': 'Assist',
+          'community': 'Community',
+          'remix': 'Remix',
+          'upscale': 'Upscale',
+          'background': 'Background',
+          'style-mix': 'Style Mix'
+        };
+        const title = titles[page] || 'Coming Soon';
+        // Replace Hub with Coming Soon if it was a specific request
+        contentArea.innerHTML = '';
+        contentArea.appendChild(ComingSoon(title));
+      }
+    }
     // Notify header to update active state
     window.dispatchEvent(new CustomEvent('route:changed', { detail: { page } }));
   } catch (err) {
@@ -144,7 +166,7 @@ contentArea.className = 'flex-1 relative w-full overflow-hidden flex flex-col bg
 app.appendChild(contentArea);
 
 // Initial Route
-navigate('image');
+navigate('contents');
 
 // Event Listener for Navigation (legacy custom events)
 window.addEventListener('navigate', (e) => {
