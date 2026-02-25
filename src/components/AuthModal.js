@@ -72,6 +72,13 @@ export function AuthModal(onSuccess) {
         if (e.target === overlay) dismiss();
     });
 
+    const onKeyDown = (e) => {
+        if (e.key === 'Escape') {
+            dismiss();
+        }
+    };
+    document.addEventListener('keydown', onKeyDown);
+
     toggleBtn.onclick = () => {
         const isPassword = input.type === 'password';
         input.type = isPassword ? 'text' : 'password';
@@ -97,6 +104,10 @@ export function AuthModal(onSuccess) {
             setTimeout(() => input.classList.remove('border-red-500/50'), 2000);
         }
     };
+
+    const cleanup = () => document.removeEventListener('keydown', onKeyDown);
+    overlay.addEventListener('transitionend', cleanup);
+    overlay.addEventListener('DOMNodeRemoved', cleanup);
 
     return overlay;
 }
