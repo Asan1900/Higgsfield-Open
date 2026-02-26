@@ -16,6 +16,15 @@ An open-source AI image and cinema studio that mirrors the Higgsfield product ex
 - **API Key Vault** — Keys live in `localStorage` only; never sent anywhere except Muapi.
 - **Responsive UI** — Dark, glassy interface optimized for desktop and mobile.
 
+## 🧩 Current Feature Modules
+
+- **Image Studio**: prompt + generation flow with history and downloads.
+- **Cinema Studio**: camera body/lens/focal/aperture controls mapped to prompt modifiers.
+- **Image tools** (stubbed screens wired via router): Remix, Upscale, Background, Style Mix, Look Transfer, Outpaint, Object Edit, Prompt Edits, Reimagine, Batch Look, Portrait Enhancer, Popcorn Comics.
+- **Media Library**: browse outputs and history (local-first persistence).
+- **Settings/Auth**: API Key modal with X/ESC/Enter, key vault stored in `localStorage`.
+- **Header/Nav**: hover/click dropdowns (Image/Video/Cinema) with two-column cards and scroll containment; Esc/click-outside to close.
+
 ## 🚀 Quick Start
 
 ### Prerequisites
@@ -48,6 +57,8 @@ npm run preview
 3) **Set Camera/Resolution** — In Cinema Studio, pick body, lens, focal length, and aperture; for models with resolution enums, select up to 4K.
 4) **Prompt & Generate** — Write a prompt, hit Generate, and watch progress.
 5) **Review History** — Reopen or download any past generation from the sidebar (persisted locally).
+6) **Dropdown Navigation** — Image/Video/Cinema dropdowns open on hover/click and stay visible on scroll; close with click outside or Esc.
+7) **Modal Shortcuts** — API Key modal supports Esc to close, Enter to submit, and auto-focuses for quick ⌘V paste.
 
 ## 🏗️ Architecture Overview
 
@@ -100,6 +111,20 @@ Design system: dark theme (`#050505`) with neon accents, heavy glassmorphism, an
 - `npm run dev` — start dev server
 - `npm run build` — production build
 - `npm run preview` — preview the build locally
+
+### Recently Added UI touches
+- Two-column Image dropdown with icons/descriptions and scroll containment.
+- Dropdowns keep visibility over the navbar (no clipping) and honor Escape/blur close.
+- API Key modal: close button, backdrop click, Esc, Enter submit, auto-focus for paste.
+- New image feature stubs (Remix, Upscale, Background, Style Mix, Look Transfer, Outpaint, Object Edit, Prompt Edits, Reimagine, Batch Look, Portrait Enhancer, Popcorn Comics) wired via router.
+
+## 🗺️ Development Plan
+- **Short term (UI polish)**: finish dropdown parity across Video/Cinema, refine gradients/hover states, improve accessibility (focus rings, ARIA).
+- **Auth & onboarding**: inline key status indicator, retry/validate Muapi key, optional remember-last-model.
+- **Image tools**: activate stubs with backend hooks (remix/upscale/bg/remove/style mix/outpaint/object edit/prompt edits/batch look/portrait enhancer/popcorn).
+- **Video path**: wire Text-to-Video, Motion Master, Cinematic Shorts with timeline-like controls.
+- **Performance**: lazy-load heavy modules, cache models, optimize initial bundle.
+- **Collab & persistence** (later): optional server history, team projects, shareable links.
 
 ## 🔮 Roadmap (next up)
 - Wire video models and timeline-like canvas

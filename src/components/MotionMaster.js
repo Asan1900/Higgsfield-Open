@@ -1,4 +1,5 @@
 import { muapi } from '../lib/muapi.js';
+import { setupUploader, setupButtonGroup, downloadMedia } from '../lib/uiUtils.js';
 
 /**
  * MotionMaster — Image-to-Video animation tool.
@@ -6,22 +7,22 @@ import { muapi } from '../lib/muapi.js';
  * Uses veo3-image-to-video or wan-2.1-video.
  */
 export function MotionMaster() {
-    const container = document.createElement('div');
-    container.className = 'w-full h-full flex flex-col bg-app-bg text-white overflow-hidden';
+  const container = document.createElement('div');
+  container.className = 'w-full h-full flex flex-col bg-app-bg text-white overflow-hidden';
 
-    let sourceImageUrl = '';
-    let isGenerating = false;
+  let sourceImageUrl = '';
+  let isGenerating = false;
 
-    const motionPresets = [
-        { id: 'cinematic-slowmo', label: 'Cinematic Slow-Mo', prompt: 'Slow cinematic camera movement, dramatic lighting, shallow depth of field, film grain' },
-        { id: 'dynamic-pan', label: 'Dynamic Pan', prompt: 'Smooth horizontal camera pan revealing the full scene, cinematic movement' },
-        { id: 'zoom-in', label: 'Dramatic Zoom', prompt: 'Slow dramatic zoom into the subject, increasing detail, cinematic focus pull' },
-        { id: 'parallax', label: 'Parallax Drift', prompt: 'Subtle parallax effect with depth layers moving at different speeds, dreamy atmosphere' },
-        { id: 'wind-flow', label: 'Living Scene', prompt: 'Gentle wind blowing through the scene, subtle environmental motion, leaves rustling, clouds drifting' },
-        { id: 'orbit', label: 'Orbit Shot', prompt: 'Camera slowly orbits around the subject, revealing different angles, smooth dolly movement' }
-    ];
+  const motionPresets = [
+    { id: 'cinematic-slowmo', label: 'Cinematic Slow-Mo', prompt: 'Slow cinematic camera movement, dramatic lighting, shallow depth of field, film grain' },
+    { id: 'dynamic-pan', label: 'Dynamic Pan', prompt: 'Smooth horizontal camera pan revealing the full scene, cinematic movement' },
+    { id: 'zoom-in', label: 'Dramatic Zoom', prompt: 'Slow dramatic zoom into the subject, increasing detail, cinematic focus pull' },
+    { id: 'parallax', label: 'Parallax Drift', prompt: 'Subtle parallax effect with depth layers moving at different speeds, dreamy atmosphere' },
+    { id: 'wind-flow', label: 'Living Scene', prompt: 'Gentle wind blowing through the scene, subtle environmental motion, leaves rustling, clouds drifting' },
+    { id: 'orbit', label: 'Orbit Shot', prompt: 'Camera slowly orbits around the subject, revealing different angles, smooth dolly movement' }
+  ];
 
-    container.innerHTML = `
+  container.innerHTML = `
     <div class="flex-1 flex flex-col lg:flex-row overflow-hidden">
       <!-- Left Panel -->
       <div class="w-full lg:w-[420px] flex-shrink-0 border-r border-white/5 bg-black/20 flex flex-col overflow-y-auto custom-scrollbar">
@@ -109,101 +110,101 @@ export function MotionMaster() {
     </div>
   `;
 
-    requestAnimationFrame(() => {
-        const fileInput = container.querySelector('#motion-file-input');
-        const dropzone = container.querySelector('#motion-dropzone');
-        const preview = container.querySelector('#motion-preview');
-        const previewImg = container.querySelector('#motion-preview-img');
-        const clearBtn = container.querySelector('#motion-clear-btn');
-        const urlInput = container.querySelector('#motion-url-input');
-        const promptInput = container.querySelector('#motion-prompt');
-        const generateBtn = container.querySelector('#motion-generate-btn');
-        const outputEl = container.querySelector('#motion-output');
-        const loadingEl = container.querySelector('#motion-loading');
-        const resultEl = container.querySelector('#motion-result');
-        const resultVideo = container.querySelector('#motion-result-video');
-        const downloadBtn = container.querySelector('#motion-download-btn');
-        const retryBtn = container.querySelector('#motion-retry-btn');
-        const presetBtns = container.querySelectorAll('.motion-preset-btn');
-        const engineBtns = container.querySelectorAll('.motion-engine-btn');
-        const arBtns = container.querySelectorAll('.motion-ar-btn');
+  requestAnimationFrame(() => {
+    const fileInput = container.querySelector('#motion-file-input');
+    const dropzone = container.querySelector('#motion-dropzone');
+    const preview = container.querySelector('#motion-preview');
+    const previewImg = container.querySelector('#motion-preview-img');
+    const clearBtn = container.querySelector('#motion-clear-btn');
+    const urlInput = container.querySelector('#motion-url-input');
+    const promptInput = container.querySelector('#motion-prompt');
+    const generateBtn = container.querySelector('#motion-generate-btn');
+    const outputEl = container.querySelector('#motion-output');
+    const loadingEl = container.querySelector('#motion-loading');
+    const resultEl = container.querySelector('#motion-result');
+    const resultVideo = container.querySelector('#motion-result-video');
+    const downloadBtn = container.querySelector('#motion-download-btn');
+    const retryBtn = container.querySelector('#motion-retry-btn');
+    const presetBtns = container.querySelectorAll('.motion-preset-btn');
+    const engineBtns = container.querySelectorAll('.motion-engine-btn');
+    const arBtns = container.querySelectorAll('.motion-ar-btn');
 
-        let selectedPreset = motionPresets[0];
-        let selectedEngine = 'veo3-image-to-video';
-        let selectedAR = '16:9';
+    let selectedPreset = motionPresets[0];
+    let selectedEngine = 'veo3-image-to-video';
+    let selectedAR = '16:9';
 
-        const handleFile = (file) => {
-            if (!file || !file.type.startsWith('image/')) return;
-            const reader = new FileReader();
-            reader.onload = (e) => { sourceImageUrl = e.target.result; previewImg.src = sourceImageUrl; dropzone.classList.add('hidden'); preview.classList.remove('hidden'); urlInput.value = ''; };
-            reader.readAsDataURL(file);
-        };
+    const handleImageSet = (url) => {
+      sourceImageUrl = url;
+    };
 
-        fileInput.addEventListener('change', (e) => handleFile(e.target.files[0]));
-        dropzone.addEventListener('dragover', (e) => { e.preventDefault(); dropzone.classList.add('border-violet-400/60'); });
-        dropzone.addEventListener('dragleave', () => dropzone.classList.remove('border-violet-400/60'));
-        dropzone.addEventListener('drop', (e) => { e.preventDefault(); dropzone.classList.remove('border-violet-400/60'); handleFile(e.dataTransfer.files[0]); });
-        clearBtn.addEventListener('click', () => { sourceImageUrl = ''; dropzone.classList.remove('hidden'); preview.classList.add('hidden'); });
-        urlInput.addEventListener('change', () => { if (urlInput.value.trim()) { sourceImageUrl = urlInput.value.trim(); previewImg.src = sourceImageUrl; dropzone.classList.add('hidden'); preview.classList.remove('hidden'); } });
-
-        // Presets
-        presetBtns.forEach(btn => {
-            btn.addEventListener('click', () => {
-                presetBtns.forEach(b => { b.className = b.className.replace(/bg-violet-500\/20 border-violet-400\/40 text-violet-400/g, 'bg-white/5 border-white/10 text-secondary hover:bg-white/10'); });
-                btn.className = btn.className.replace(/bg-white\/5 border-white\/10 text-secondary hover:bg-white\/10/g, 'bg-violet-500/20 border-violet-400/40 text-violet-400');
-                selectedPreset = motionPresets.find(p => p.id === btn.dataset.preset);
-            });
-        });
-
-        // AR
-        arBtns.forEach(btn => {
-            btn.addEventListener('click', () => {
-                arBtns.forEach(b => { b.className = b.className.replace(/bg-violet-500\/20 border-violet-400\/40 text-violet-400/g, 'bg-white/5 border-white/10 text-secondary hover:bg-white/10'); });
-                btn.className = btn.className.replace(/bg-white\/5 border-white\/10 text-secondary hover:bg-white\/10/g, 'bg-violet-500/20 border-violet-400/40 text-violet-400');
-                selectedAR = btn.dataset.ar;
-            });
-        });
-
-        generateBtn.addEventListener('click', async () => {
-            if (isGenerating) return;
-            if (!sourceImageUrl) { alert('Please upload an image to animate.'); return; }
-
-            isGenerating = true;
-            generateBtn.disabled = true;
-            outputEl.classList.add('hidden');
-            resultEl.classList.add('hidden');
-            loadingEl.classList.remove('hidden');
-            loadingEl.classList.add('flex');
-
-            const motionPrompt = promptInput.value.trim() || selectedPreset.prompt;
-
-            try {
-                const result = await muapi.generateVideo({
-                    model: selectedEngine,
-                    prompt: motionPrompt,
-                    image_url: sourceImageUrl,
-                    aspect_ratio: selectedAR
-                });
-
-                if (result.url) {
-                    resultVideo.src = result.url;
-                    loadingEl.classList.add('hidden');
-                    resultEl.classList.remove('hidden');
-                }
-            } catch (err) {
-                console.error('Motion generation failed:', err);
-                loadingEl.classList.add('hidden');
-                outputEl.classList.remove('hidden');
-                outputEl.innerHTML = `<div class="text-red-400 text-sm font-bold text-center">⚠ ${err.message}</div>`;
-            } finally {
-                isGenerating = false;
-                generateBtn.disabled = false;
-            }
-        });
-
-        downloadBtn?.addEventListener('click', () => { const a = document.createElement('a'); a.href = resultVideo.src; a.download = `motion_${Date.now()}.mp4`; a.click(); });
-        retryBtn?.addEventListener('click', () => { resultEl.classList.add('hidden'); outputEl.classList.remove('hidden'); outputEl.innerHTML = `<div class="text-6xl opacity-20">🎥</div><p class="text-secondary text-sm text-center max-w-sm">Try a different motion preset or custom prompt!</p>`; });
+    setupUploader({
+      fileInput,
+      dropzone,
+      preview,
+      previewImg,
+      clearBtn,
+      urlInput,
+      onImageSet: handleImageSet
     });
 
-    return container;
+    // Presets
+    setupButtonGroup(presetBtns, {
+      activeClasses: ['bg-violet-500/20', 'border-violet-400/40', 'text-violet-400'],
+      inactiveClasses: ['bg-white/5', 'border-white/10', 'text-secondary', 'hover:bg-white/10'],
+      onSelect: (dataset) => {
+        selectedPreset = motionPresets.find(p => p.id === dataset.preset);
+      }
+    });
+
+    // AR
+    setupButtonGroup(arBtns, {
+      activeClasses: ['bg-violet-500/20', 'border-violet-400/40', 'text-violet-400'],
+      inactiveClasses: ['bg-white/5', 'border-white/10', 'text-secondary', 'hover:bg-white/10'],
+      onSelect: (dataset) => {
+        selectedAR = dataset.ar;
+      }
+    });
+
+    generateBtn.addEventListener('click', async () => {
+      if (isGenerating) return;
+      if (!sourceImageUrl) { alert('Please upload an image to animate.'); return; }
+
+      isGenerating = true;
+      generateBtn.disabled = true;
+      outputEl.classList.add('hidden');
+      resultEl.classList.add('hidden');
+      loadingEl.classList.remove('hidden');
+      loadingEl.classList.add('flex');
+
+      const motionPrompt = promptInput.value.trim() || selectedPreset.prompt;
+
+      try {
+        const result = await muapi.generateVideo({
+          model: selectedEngine,
+          prompt: motionPrompt,
+          image_url: sourceImageUrl,
+          aspect_ratio: selectedAR
+        });
+
+        if (result.url) {
+          resultVideo.src = result.url;
+          loadingEl.classList.add('hidden');
+          resultEl.classList.remove('hidden');
+        }
+      } catch (err) {
+        console.error('Motion generation failed:', err);
+        loadingEl.classList.add('hidden');
+        outputEl.classList.remove('hidden');
+        outputEl.innerHTML = `<div class="text-red-400 text-sm font-bold text-center">⚠ ${err.message}</div>`;
+      } finally {
+        isGenerating = false;
+        generateBtn.disabled = false;
+      }
+    });
+
+    downloadBtn?.addEventListener('click', () => downloadMedia(resultVideo.src, `motion_${Date.now()}.mp4`));
+    retryBtn?.addEventListener('click', () => { resultEl.classList.add('hidden'); outputEl.classList.remove('hidden'); outputEl.innerHTML = `<div class="text-6xl opacity-20">🎥</div><p class="text-secondary text-sm text-center max-w-sm">Try a different motion preset or custom prompt!</p>`; });
+  });
+
+  return container;
 }

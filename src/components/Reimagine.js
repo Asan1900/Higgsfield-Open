@@ -1,4 +1,5 @@
 import { muapi } from '../lib/muapi.js';
+import { setupUploader, setupButtonGroup, downloadMedia } from '../lib/uiUtils.js';
 
 /**
  * Reimagine — Atmosphere Lab / Scene Reimagining.
@@ -129,34 +130,34 @@ export function Reimagine() {
     let selectedVibe = vibePresets[0];
     let selectedAR = '1:1';
 
-    const handleFile = (file) => {
-      if (!file || !file.type.startsWith('image/')) return;
-      const reader = new FileReader();
-      reader.onload = (e) => { sourceImageUrl = e.target.result; previewImg.src = sourceImageUrl; dropzone.classList.add('hidden'); preview.classList.remove('hidden'); urlInput.value = ''; };
-      reader.readAsDataURL(file);
+    const handleImageSet = (url) => {
+      sourceImageUrl = url;
     };
 
-    fileInput.addEventListener('change', (e) => handleFile(e.target.files[0]));
-    dropzone.addEventListener('dragover', (e) => { e.preventDefault(); dropzone.classList.add('border-emerald-400/60'); });
-    dropzone.addEventListener('dragleave', () => dropzone.classList.remove('border-emerald-400/60'));
-    dropzone.addEventListener('drop', (e) => { e.preventDefault(); dropzone.classList.remove('border-emerald-400/60'); handleFile(e.dataTransfer.files[0]); });
-    clearBtn.addEventListener('click', () => { sourceImageUrl = ''; dropzone.classList.remove('hidden'); preview.classList.add('hidden'); });
-    urlInput.addEventListener('change', () => { if (urlInput.value.trim()) { sourceImageUrl = urlInput.value.trim(); previewImg.src = sourceImageUrl; dropzone.classList.add('hidden'); preview.classList.remove('hidden'); } });
-
-    vibeBtns.forEach(btn => {
-      btn.addEventListener('click', () => {
-        vibeBtns.forEach(b => { b.className = b.className.replace(/bg-emerald-500\/20 border-emerald-400\/40 text-emerald-400/g, 'bg-white/5 border-white/10 text-secondary hover:bg-white/10'); });
-        btn.className = btn.className.replace(/bg-white\/5 border-white\/10 text-secondary hover:bg-white\/10/g, 'bg-emerald-500/20 border-emerald-400/40 text-emerald-400');
-        selectedVibe = vibePresets.find(v => v.id === btn.dataset.vibe);
-      });
+    setupUploader({
+      fileInput,
+      dropzone,
+      preview,
+      previewImg,
+      clearBtn,
+      urlInput,
+      onImageSet: handleImageSet
     });
 
-    arBtns.forEach(btn => {
-      btn.addEventListener('click', () => {
-        arBtns.forEach(b => { b.className = b.className.replace(/bg-emerald-500\/20 border-emerald-400\/40 text-emerald-400/g, 'bg-white/5 border-white/10 text-secondary hover:bg-white/10'); });
-        btn.className = btn.className.replace(/bg-white\/5 border-white\/10 text-secondary hover:bg-white\/10/g, 'bg-emerald-500/20 border-emerald-400/40 text-emerald-400');
-        selectedAR = btn.dataset.ar;
-      });
+    setupButtonGroup(vibeBtns, {
+      activeClasses: ['bg-emerald-500/20', 'border-emerald-400/40', 'text-emerald-400'],
+      inactiveClasses: ['bg-white/5', 'border-white/10', 'text-secondary', 'hover:bg-white/10'],
+      onSelect: (dataset) => {
+        selectedVibe = vibePresets.find(v => v.id === dataset.vibe);
+      }
+    });
+
+    setupButtonGroup(arBtns, {
+      activeClasses: ['bg-emerald-500/20', 'border-emerald-400/40', 'text-emerald-400'],
+      inactiveClasses: ['bg-white/5', 'border-white/10', 'text-secondary', 'hover:bg-white/10'],
+      onSelect: (dataset) => {
+        selectedAR = dataset.ar;
+      }
     });
 
     generateBtn.addEventListener('click', async () => {
@@ -196,7 +197,7 @@ export function Reimagine() {
       }
     });
 
-    downloadBtn?.addEventListener('click', () => { const a = document.createElement('a'); a.href = resultImg.src; a.download = `reimagine_${Date.now()}.png`; a.click(); });
+    downloadBtn?.addEventListener('click', () => downloadMedia(resultImg.src, `reimagine_${Date.now()}.png`));
     retryBtn?.addEventListener('click', () => { resultEl.classList.add('hidden'); outputEl.classList.remove('hidden'); outputEl.innerHTML = `<div class="text-6xl opacity-20">🌌</div><p class="text-secondary text-sm text-center max-w-sm">Pick a different atmosphere and reimagine!</p>`; });
   });
 
