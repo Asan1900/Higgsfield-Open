@@ -1,4 +1,5 @@
 import { muapi } from '../lib/muapi.js';
+import { setupUploader, setupButtonGroup, downloadMedia } from '../lib/uiUtils.js';
 
 /**
  * MagicEditor — Unified image editing interface.
@@ -6,22 +7,22 @@ import { muapi } from '../lib/muapi.js';
  * Uses nano-banana for all modifications.
  */
 export function MagicEditor() {
-    const container = document.createElement('div');
-    container.className = 'w-full h-full flex flex-col bg-app-bg text-white overflow-hidden';
-    let currentImage = null;
-    let isGenerating = false;
+  const container = document.createElement('div');
+  container.className = 'w-full h-full flex flex-col bg-app-bg text-white overflow-hidden';
+  let currentImage = null;
+  let isGenerating = false;
 
-    const editActions = [
-        { id: 'freeform', label: '💭 Freeform Prompt', desc: 'Describe any edit you want' },
-        { id: 'remove', label: '🧹 Remove', desc: 'Remove an object completely' },
-        { id: 'replace', label: '🔄 Replace', desc: 'Swap one object for another' },
-        { id: 'add', label: '➕ Add', desc: 'Insert a new object' },
-        { id: 'reposition', label: '↔️ Move', desc: 'Move an object' },
-        { id: 'resize', label: '📏 Resize', desc: 'Change size of an object' },
-        { id: 'color', label: '🎨 Color', desc: 'Change color of an object or background' }
-    ];
+  const editActions = [
+    { id: 'freeform', label: '💭 Freeform Prompt', desc: 'Describe any edit you want' },
+    { id: 'remove', label: '🧹 Remove', desc: 'Remove an object completely' },
+    { id: 'replace', label: '🔄 Replace', desc: 'Swap one object for another' },
+    { id: 'add', label: '➕ Add', desc: 'Insert a new object' },
+    { id: 'reposition', label: '↔️ Move', desc: 'Move an object' },
+    { id: 'resize', label: '📏 Resize', desc: 'Change size of an object' },
+    { id: 'color', label: '🎨 Color', desc: 'Change color of an object or background' }
+  ];
 
-    container.innerHTML = `
+  container.innerHTML = `
     <div class="flex-1 flex flex-col lg:flex-row overflow-hidden">
       <!-- Left Sidebar: Controls -->
       <div class="w-full lg:w-[420px] flex-shrink-0 border-r border-white/5 bg-black/20 flex flex-col overflow-y-auto custom-scrollbar">
@@ -104,35 +105,35 @@ export function MagicEditor() {
     </div>
   `;
 
-    requestAnimationFrame(() => {
-        const uploadArea = container.querySelector('#me-upload-area');
-        const fileInput = container.querySelector('#me-file-input');
-        const urlInput = container.querySelector('#me-url-input');
-        const sourcePreview = container.querySelector('#me-source-preview');
-        const placeholder = container.querySelector('#me-upload-placeholder');
-        const actionBtns = container.querySelectorAll('.me-action-btn');
-        const promptContainer = container.querySelector('#me-prompt-container');
-        const generateBtn = container.querySelector('#me-generate-btn');
-        const outputPlac = container.querySelector('#me-output-placeholder');
-        const loadingEl = container.querySelector('#me-loading');
-        const resultEl = container.querySelector('#me-result');
-        const resultImg = container.querySelector('#me-result-img');
+  requestAnimationFrame(() => {
+    const uploadArea = container.querySelector('#me-upload-area');
+    const fileInput = container.querySelector('#me-file-input');
+    const urlInput = container.querySelector('#me-url-input');
+    const sourcePreview = container.querySelector('#me-source-preview');
+    const placeholder = container.querySelector('#me-upload-placeholder');
+    const actionBtns = container.querySelectorAll('.me-action-btn');
+    const promptContainer = container.querySelector('#me-prompt-container');
+    const generateBtn = container.querySelector('#me-generate-btn');
+    const outputPlac = container.querySelector('#me-output-placeholder');
+    const loadingEl = container.querySelector('#me-loading');
+    const resultEl = container.querySelector('#me-result');
+    const resultImg = container.querySelector('#me-result-img');
 
-        let currentAction = 'freeform';
+    let currentAction = 'freeform';
 
-        const renderPromptUI = () => {
-            if (currentAction === 'freeform') {
-                promptContainer.innerHTML = `
+    const renderPromptUI = () => {
+      if (currentAction === 'freeform') {
+        promptContainer.innerHTML = `
           <label class="text-[10px] font-black text-muted uppercase tracking-[0.3em]">Instructions</label>
           <textarea id="me-main-prompt" rows="3" placeholder="e.g. 'Make it winter', 'Make the dog wear a hat'" class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder-white/30 resize-none focus:outline-none focus:border-fuchsia-400/50 mt-2 custom-scrollbar"></textarea>
         `;
-            } else if (currentAction === 'remove') {
-                promptContainer.innerHTML = `
+      } else if (currentAction === 'remove') {
+        promptContainer.innerHTML = `
           <label class="text-[10px] font-black text-muted uppercase tracking-[0.3em]">Object to Remove</label>
           <input type="text" id="me-main-prompt" placeholder="e.g. 'the person in the background'" class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder-white/30 focus:outline-none focus:border-fuchsia-400/50 mt-2" />
         `;
-            } else if (currentAction === 'replace') {
-                promptContainer.innerHTML = `
+      } else if (currentAction === 'replace') {
+        promptContainer.innerHTML = `
           <div class="space-y-3">
             <div>
               <label class="text-[10px] font-black text-muted uppercase tracking-[0.3em]">Replace This</label>
@@ -144,8 +145,8 @@ export function MagicEditor() {
             </div>
           </div>
         `;
-            } else if (currentAction === 'color') {
-                promptContainer.innerHTML = `
+      } else if (currentAction === 'color') {
+        promptContainer.innerHTML = `
           <div class="space-y-3">
             <div>
               <label class="text-[10px] font-black text-muted uppercase tracking-[0.3em]">Change Color Of</label>
@@ -157,115 +158,104 @@ export function MagicEditor() {
             </div>
           </div>
         `;
-            } else {
-                // Add, reposition, resize
-                promptContainer.innerHTML = `
+      } else {
+        // Add, reposition, resize
+        promptContainer.innerHTML = `
           <label class="text-[10px] font-black text-muted uppercase tracking-[0.3em]">Instructions</label>
           <textarea id="me-main-prompt" rows="3" placeholder="e.g. 'Add a bird to the sky', 'Move the tree to the left'" class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder-white/30 resize-none focus:outline-none focus:border-fuchsia-400/50 mt-2 custom-scrollbar"></textarea>
         `;
-            }
-        };
+      }
+    };
 
-        renderPromptUI();
+    renderPromptUI();
 
-        actionBtns.forEach(btn => btn.addEventListener('click', () => {
-            actionBtns.forEach(b => {
-                b.className = b.className.replace(/bg-fuchsia-500\/20 border-fuchsia-400\/40 text-fuchsia-400/g, 'bg-white/5 border-white/10 text-secondary hover:bg-white/10');
-            });
-            btn.className = btn.className.replace(/bg-white\/5 border-white\/10 text-secondary hover:bg-white\/10/g, 'bg-fuchsia-500/20 border-fuchsia-400/40 text-fuchsia-400');
-            currentAction = btn.dataset.action;
-            renderPromptUI();
-        }));
+    const handleImageSet = (url) => {
+      currentImage = url;
+      if (url) {
+        generateBtn.disabled = false;
+        placeholder.classList.add('hidden');
+        sourcePreview.classList.remove('hidden');
+      } else {
+        generateBtn.disabled = true;
+        placeholder.classList.remove('hidden');
+        sourcePreview.classList.add('hidden');
+      }
+    };
 
-        const handleImageSet = (url) => {
-            currentImage = url;
-            sourcePreview.src = url;
-            sourcePreview.classList.remove('hidden');
-            placeholder.classList.add('hidden');
-            generateBtn.disabled = false;
-            urlInput.value = url.startsWith('blob:') ? '' : url;
-        };
-
-        uploadArea.addEventListener('click', () => fileInput.click());
-        uploadArea.addEventListener('dragover', e => { e.preventDefault(); uploadArea.classList.add('border-fuchsia-400/50'); });
-        uploadArea.addEventListener('dragleave', () => uploadArea.classList.remove('border-fuchsia-400/50'));
-        uploadArea.addEventListener('drop', e => {
-            e.preventDefault();
-            uploadArea.classList.remove('border-fuchsia-400/50');
-            if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-                handleImageSet(URL.createObjectURL(e.dataTransfer.files[0]));
-            }
-        });
-
-        fileInput.addEventListener('change', (e) => {
-            if (e.target.files && e.target.files[0]) {
-                handleImageSet(URL.createObjectURL(e.target.files[0]));
-            }
-        });
-
-        urlInput.addEventListener('change', () => {
-            if (urlInput.value) handleImageSet(urlInput.value);
-        });
-
-        generateBtn.addEventListener('click', async () => {
-            if (isGenerating || !currentImage) return;
-
-            const mainInput = container.querySelector('#me-main-prompt');
-            const targetInput = container.querySelector('#me-target-prompt');
-            let finalPrompt = '';
-
-            if (currentAction === 'freeform') {
-                finalPrompt = mainInput.value.trim();
-            } else if (currentAction === 'remove') {
-                finalPrompt = `Remove ${mainInput.value.trim()}`;
-            } else if (currentAction === 'replace') {
-                finalPrompt = `Replace ${targetInput?.value?.trim() || ''} with ${mainInput.value.trim()}`;
-            } else if (currentAction === 'color') {
-                finalPrompt = `Change color of ${targetInput?.value?.trim() || ''} to ${mainInput.value.trim()}`;
-            } else {
-                finalPrompt = mainInput.value.trim();
-            }
-
-            if (!finalPrompt) { alert('Please provide an edit instruction.'); return; }
-
-            isGenerating = true; generateBtn.disabled = true;
-            outputPlac.classList.add('hidden'); resultEl.classList.add('hidden');
-            loadingEl.classList.remove('hidden'); loadingEl.classList.add('flex');
-
-            try {
-                const result = await muapi.generateImage({
-                    model: 'nano-banana',
-                    prompt: finalPrompt,
-                    image_url: currentImage
-                });
-
-                if (result.url) {
-                    resultImg.src = result.url;
-                    loadingEl.classList.add('hidden');
-                    resultEl.classList.remove('hidden');
-                }
-            } catch (err) {
-                console.error('MagicEditor failed:', err);
-                loadingEl.classList.add('hidden');
-                outputPlac.classList.remove('hidden');
-                outputPlac.innerHTML = `<div class="text-red-400 text-sm font-bold bg-red-500/10 px-4 py-3 rounded-xl border border-red-500/20">⚠ ${err.message || 'Model is currently unreachable. Please try again later.'}</div>`;
-            } finally {
-                isGenerating = false; generateBtn.disabled = false;
-            }
-        });
-
-        container.querySelector('#me-download')?.addEventListener('click', () => {
-            const a = document.createElement('a'); a.href = resultImg.src;
-            a.download = `magic_edit_${Date.now()}.png`; a.click();
-        });
-
-        container.querySelector('#me-use-as-source')?.addEventListener('click', () => {
-            handleImageSet(resultImg.src);
-            resultEl.classList.add('hidden');
-            outputPlac.classList.remove('hidden');
-            outputPlac.innerHTML = `<div class="text-6xl opacity-20">🪄</div><p class="text-secondary text-sm">Image updated. Apply another edit to continue refining.</p>`;
-        });
+    setupUploader({
+      fileInput,
+      dropzone: uploadArea,
+      preview: sourcePreview,
+      previewImg: sourcePreview,
+      urlInput,
+      onImageSet: handleImageSet
     });
 
-    return container;
+    setupButtonGroup(actionBtns, {
+      activeClasses: ['bg-fuchsia-500/20', 'border-fuchsia-400/40', 'text-fuchsia-400'],
+      inactiveClasses: ['bg-white/5', 'border-white/10', 'text-secondary', 'hover:bg-white/10'],
+      onSelect: (dataset) => {
+        currentAction = dataset.action;
+        renderPromptUI();
+      }
+    });
+
+    generateBtn.addEventListener('click', async () => {
+      if (isGenerating || !currentImage) return;
+
+      const mainInput = container.querySelector('#me-main-prompt');
+      const targetInput = container.querySelector('#me-target-prompt');
+      let finalPrompt = '';
+
+      if (currentAction === 'freeform') {
+        finalPrompt = mainInput.value.trim();
+      } else if (currentAction === 'remove') {
+        finalPrompt = `Remove ${mainInput.value.trim()}`;
+      } else if (currentAction === 'replace') {
+        finalPrompt = `Replace ${targetInput?.value?.trim() || ''} with ${mainInput.value.trim()}`;
+      } else if (currentAction === 'color') {
+        finalPrompt = `Change color of ${targetInput?.value?.trim() || ''} to ${mainInput.value.trim()}`;
+      } else {
+        finalPrompt = mainInput.value.trim();
+      }
+
+      if (!finalPrompt) { alert('Please provide an edit instruction.'); return; }
+
+      isGenerating = true; generateBtn.disabled = true;
+      outputPlac.classList.add('hidden'); resultEl.classList.add('hidden');
+      loadingEl.classList.remove('hidden'); loadingEl.classList.add('flex');
+
+      try {
+        const result = await muapi.generateImage({
+          model: 'nano-banana',
+          prompt: finalPrompt,
+          image_url: currentImage
+        });
+
+        if (result.url) {
+          resultImg.src = result.url;
+          loadingEl.classList.add('hidden');
+          resultEl.classList.remove('hidden');
+        }
+      } catch (err) {
+        console.error('MagicEditor failed:', err);
+        loadingEl.classList.add('hidden');
+        outputPlac.classList.remove('hidden');
+        outputPlac.innerHTML = `<div class="text-red-400 text-sm font-bold bg-red-500/10 px-4 py-3 rounded-xl border border-red-500/20">⚠ ${err.message || 'Model is currently unreachable. Please try again later.'}</div>`;
+      } finally {
+        isGenerating = false; generateBtn.disabled = false;
+      }
+    });
+
+    container.querySelector('#me-download')?.addEventListener('click', () => downloadMedia(resultImg.src, `magic_edit_${Date.now()}.png`));
+
+    container.querySelector('#me-use-as-source')?.addEventListener('click', () => {
+      handleImageSet(resultImg.src);
+      resultEl.classList.add('hidden');
+      outputPlac.classList.remove('hidden');
+      outputPlac.innerHTML = `<div class="text-6xl opacity-20">🪄</div><p class="text-secondary text-sm">Image updated. Apply another edit to continue refining.</p>`;
+    });
+  });
+
+  return container;
 }

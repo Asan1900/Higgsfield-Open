@@ -1,4 +1,5 @@
 import { muapi } from '../lib/muapi.js';
+import { setupUploader, setupButtonGroup, downloadMedia } from '../lib/uiUtils.js';
 
 /**
  * Upscale — Smart 4K Refinement.
@@ -127,34 +128,34 @@ export function Upscale() {
     let selectedPresetPrompt = 'Enhance facial details, clear sharp eyes, smooth skin texture, studio-quality portrait photography';
     let selectedAR = '1:1';
 
-    const handleFile = (file) => {
-      if (!file || !file.type.startsWith('image/')) return;
-      const reader = new FileReader();
-      reader.onload = (e) => { sourceImageUrl = e.target.result; previewImg.src = sourceImageUrl; dropzone.classList.add('hidden'); preview.classList.remove('hidden'); urlInput.value = ''; };
-      reader.readAsDataURL(file);
+    const handleImageSet = (url) => {
+      sourceImageUrl = url;
     };
 
-    fileInput.addEventListener('change', (e) => handleFile(e.target.files[0]));
-    dropzone.addEventListener('dragover', (e) => { e.preventDefault(); dropzone.classList.add('border-sky-400/60'); });
-    dropzone.addEventListener('dragleave', () => dropzone.classList.remove('border-sky-400/60'));
-    dropzone.addEventListener('drop', (e) => { e.preventDefault(); dropzone.classList.remove('border-sky-400/60'); handleFile(e.dataTransfer.files[0]); });
-    clearBtn.addEventListener('click', () => { sourceImageUrl = ''; dropzone.classList.remove('hidden'); preview.classList.add('hidden'); });
-    urlInput.addEventListener('change', () => { if (urlInput.value.trim()) { sourceImageUrl = urlInput.value.trim(); previewImg.src = sourceImageUrl; dropzone.classList.add('hidden'); preview.classList.remove('hidden'); } });
-
-    presetBtns.forEach(btn => {
-      btn.addEventListener('click', () => {
-        presetBtns.forEach(b => { b.className = b.className.replace(/bg-sky-500\/20 border-sky-400\/40 text-sky-400/g, 'bg-white/5 border-white/10 text-secondary hover:bg-white/10'); });
-        btn.className = btn.className.replace(/bg-white\/5 border-white\/10 text-secondary hover:bg-white\/10/g, 'bg-sky-500/20 border-sky-400/40 text-sky-400');
-        selectedPresetPrompt = btn.dataset.prompt;
-      });
+    setupUploader({
+      fileInput,
+      dropzone,
+      preview,
+      previewImg,
+      clearBtn,
+      urlInput,
+      onImageSet: handleImageSet
     });
 
-    arBtns.forEach(btn => {
-      btn.addEventListener('click', () => {
-        arBtns.forEach(b => { b.className = b.className.replace(/bg-sky-500\/20 border-sky-400\/40 text-sky-400/g, 'bg-white/5 border-white/10 text-secondary hover:bg-white/10'); });
-        btn.className = btn.className.replace(/bg-white\/5 border-white\/10 text-secondary hover:bg-white\/10/g, 'bg-sky-500/20 border-sky-400/40 text-sky-400');
-        selectedAR = btn.dataset.ar;
-      });
+    setupButtonGroup(presetBtns, {
+      activeClasses: ['bg-sky-500/20', 'border-sky-400/40', 'text-sky-400'],
+      inactiveClasses: ['bg-white/5', 'border-white/10', 'text-secondary', 'hover:bg-white/10'],
+      onSelect: (dataset) => {
+        selectedPresetPrompt = dataset.prompt;
+      }
+    });
+
+    setupButtonGroup(arBtns, {
+      activeClasses: ['bg-sky-500/20', 'border-sky-400/40', 'text-sky-400'],
+      inactiveClasses: ['bg-white/5', 'border-white/10', 'text-secondary', 'hover:bg-white/10'],
+      onSelect: (dataset) => {
+        selectedAR = dataset.ar;
+      }
     });
 
     generateBtn.addEventListener('click', async () => {
@@ -194,7 +195,7 @@ export function Upscale() {
       }
     });
 
-    downloadBtn?.addEventListener('click', () => { const a = document.createElement('a'); a.href = resultImg.src; a.download = `upscale_4k_${Date.now()}.png`; a.click(); });
+    downloadBtn?.addEventListener('click', () => downloadMedia(resultImg.src, `upscale_4k_${Date.now()}.png`));
     newBtn?.addEventListener('click', () => {
       sourceImageUrl = '';
       dropzone.classList.remove('hidden');
