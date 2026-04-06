@@ -1,5 +1,6 @@
 
 import { muapi } from '../lib/muapi.js';
+import { h } from '../lib/domUtils.js';
 import { CameraControls } from './CameraControls.js';
 import { buildNanoBananaPrompt, buildCinemaVideoPrompt, CAMERA_MAP, LENS_MAP, LENS_MOTION_PRESET } from '../lib/promptUtils.js';
 import { AuthModal } from './AuthModal.js';
@@ -27,14 +28,12 @@ export function CinemaStudio() {
     // ==========================================
     // 1. HERO SECTION (Empty State)
     // ==========================================
-    const heroSection = document.createElement('div');
-    heroSection.className = 'flex flex-col items-center justify-center text-center px-4 animate-fade-in-up';
-    heroSection.innerHTML = `
-        <div class="mb-4 text-xs font-bold text-white/40 tracking-[0.2em] uppercase">Cinema Studio 2.0</div>
-        <h1 class="text-4xl md:text-6xl font-black text-transparent bg-clip-text bg-gradient-to-b from-white to-white/50 tracking-tight leading-tight mb-2">
-            What would you shoot<br>with infinite budget?
-        </h1>
-    `;
+    const heroSection = h('div', { class: 'flex flex-col items-center justify-center text-center px-4 animate-fade-in-up' },
+        h('div', { class: 'mb-4 text-xs font-bold text-white/40 tracking-[0.2em] uppercase' }, 'Cinema Studio 2.0'),
+        h('h1', { class: 'text-4xl md:text-6xl font-black text-transparent bg-clip-text bg-gradient-to-b from-white to-white/50 tracking-tight leading-tight mb-2' }, 
+            'What would you shoot', h('br'), 'with infinite budget?'
+        )
+    );
     container.appendChild(heroSection);
 
     // ==========================================
@@ -170,8 +169,10 @@ export function CinemaStudio() {
     };
 
     // Aspect Ratio
-    const arBtn = document.createElement('button');
-    arBtn.className = 'flex items-center gap-1.5 px-3 py-1.5 text-[10px] font-bold text-white/50 hover:text-white transition-colors bg-white/5 hover:bg-white/10 rounded-lg border border-white/5';
+    const arBtn = h('button', {
+        class: 'flex items-center gap-1.5 px-3 py-1.5 text-[10px] font-bold text-white/50 hover:text-white transition-colors bg-white/5 hover:bg-white/10 rounded-lg border border-white/5',
+        'data-tooltip': 'Set output aspect ratio'
+    });
     const updateArBtn = () => {
         arBtn.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="10" rx="2" ry="2"/></svg> ${currentSettings.aspect_ratio}`;
     };
@@ -185,8 +186,10 @@ export function CinemaStudio() {
     settingsToolbar.appendChild(arBtn);
 
     // Resolution
-    const resBtn = document.createElement('button');
-    resBtn.className = 'flex items-center gap-1.5 px-3 py-1.5 text-[10px] font-bold text-white/50 hover:text-white transition-colors bg-white/5 hover:bg-white/10 rounded-lg border border-white/5';
+    const resBtn = h('button', {
+        class: 'flex items-center gap-1.5 px-3 py-1.5 text-[10px] font-bold text-white/50 hover:text-white transition-colors bg-white/5 hover:bg-white/10 rounded-lg border border-white/5',
+        'data-tooltip': 'Set output resolution'
+    });
     const updateResBtn = (val) => {
         resBtn.dataset.value = val || '2K';
         resBtn.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg> ${resBtn.dataset.value}`;
@@ -198,8 +201,10 @@ export function CinemaStudio() {
     settingsToolbar.appendChild(resBtn);
 
     // Mode Selector (Video/Image)
-    const modeBtn = document.createElement('button');
-    modeBtn.className = 'flex items-center gap-1.5 px-3 py-1.5 text-[10px] font-bold text-white/50 hover:text-white transition-colors bg-white/5 hover:bg-white/10 rounded-lg border border-white/5';
+    const modeBtn = h('button', {
+        class: 'flex items-center gap-1.5 px-3 py-1.5 text-[10px] font-bold text-white/50 hover:text-white transition-colors bg-white/5 hover:bg-white/10 rounded-lg border border-white/5',
+        'data-tooltip': 'Toggle between Image and Video mode'
+    });
     const updateModeBtn = () => {
         const isVideo = currentSettings.mode === 'video';
         modeBtn.innerHTML = isVideo
@@ -439,9 +444,10 @@ export function CinemaStudio() {
     }
 
     // Generate Button
-    const generateBtn = document.createElement('button');
-    generateBtn.className = 'h-[56px] px-8 bg-[#d9ff00] text-black rounded-xl font-black text-xs uppercase hover:bg-white transition-colors shadow-lg disabled:opacity-50 disabled:cursor-not-allowed';
-    generateBtn.innerHTML = `GENERATE ✨`;
+    const generateBtn = h('button', {
+        class: 'h-[56px] px-8 bg-[#d9ff00] text-black rounded-xl font-black text-xs uppercase hover:bg-white transition-colors shadow-lg disabled:opacity-50 disabled:cursor-not-allowed',
+        'data-tooltip': 'Generate your cinema shot (G)'
+    }, 'GENERATE ✨');
     generateBtn.onclick = async () => {
         const prompt = textarea.value.trim();
         // Allow generation if Image is present (Image-to-Video) even if prompt is empty? 
@@ -599,24 +605,24 @@ export function CinemaStudio() {
     const canvasControls = document.createElement('div');
     canvasControls.className = 'mt-8 flex gap-3 opacity-0 transition-opacity delay-500 duration-500 justify-center';
 
-    const createActionBtn = (label, primary = false) => {
-        const btn = document.createElement('button');
-        btn.className = primary
-            ? 'bg-[#d9ff00] text-black px-6 py-2.5 rounded-xl text-xs font-black uppercase tracking-wide hover:bg-white transition-colors shadow-glow-sm hover:scale-105 active:scale-95'
-            : 'bg-white/10 hover:bg-white/20 px-6 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wide transition-all border border-white/5 backdrop-blur-lg text-white hover:border-white/20';
-        btn.textContent = label;
+    const createActionBtn = (label, primary = false, tooltip = '') => {
+        const btn = h('button', {
+            class: primary
+                ? 'bg-[#d9ff00] text-black px-6 py-2.5 rounded-xl text-xs font-black uppercase tracking-wide hover:bg-white transition-colors shadow-glow-sm hover:scale-105 active:scale-95'
+                : 'bg-white/10 hover:bg-white/20 px-6 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wide transition-all border border-white/5 backdrop-blur-lg text-white hover:border-white/20',
+            'data-tooltip': tooltip
+        }, label);
         return btn;
     };
 
-    const regenerateBtn = createActionBtn('↻ Regenerate');
-    const downloadBtn = createActionBtn('↓ Download', true);
-    const addToStoryBtn = createActionBtn('🎬 Add to Story');
-    const audioBtn = createActionBtn('🔊 Audio');
-    const newPromptBtn = createActionBtn('+ New Shot');
-    const sendToEditorBtn = createActionBtn('✂️ Edit');
-    const sendToTimelineBtn = createActionBtn('🎬 Timeline');
-
-    const copyPromptBtn = createActionBtn('📋 Copy');
+    const regenerateBtn = createActionBtn('↻ Regenerate', false, 'Retry with same prompt');
+    const downloadBtn = createActionBtn('↓ Download', true, 'Save to your device');
+    const addToStoryBtn = createActionBtn('🎬 Add to Story', false, 'Add this shot to your storyboard');
+    const audioBtn = createActionBtn('🔊 Audio', false, 'Manage audio or lip-sync');
+    const newPromptBtn = createActionBtn('+ New Shot', false, 'Start a fresh shot');
+    const sendToEditorBtn = createActionBtn('✂️ Edit', false, 'Open in Image Editor');
+    const sendToTimelineBtn = createActionBtn('🎬 Timeline', false, 'Send to Video Timeline');
+    const copyPromptBtn = createActionBtn('📋 Copy', false, 'Copy prompt to clipboard');
     copyPromptBtn.onclick = async () => {
         if (lastGeneratedEntry && lastGeneratedEntry.settings && lastGeneratedEntry.settings.prompt) {
             try {

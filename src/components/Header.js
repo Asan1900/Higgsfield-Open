@@ -1,8 +1,8 @@
 // Imports
+import { h } from '../lib/domUtils.js';
 
 export function Header(navigate) {
-    const header = document.createElement('header');
-    header.className = 'w-full flex flex-col z-50 sticky top-0';
+    const header = h('header', { class: 'w-full flex flex-col z-50 sticky top-0' });
 
     let mobileMenuOpen = false;
 
@@ -18,19 +18,20 @@ export function Header(navigate) {
     leftPart.className = 'flex items-center gap-8';
 
     // Logo
-    const logoContainer = document.createElement('div');
-    logoContainer.className = 'cursor-pointer hover:scale-110 transition-transform flex items-center gap-3';
-    logoContainer.innerHTML = `
-        <div class="w-8 h-8 bg-white rounded-lg flex items-center justify-center p-1.5 shadow-lg">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M12 2L2 7L12 12L22 7L12 2Z" fill="black"/>
-                <path d="M2 17L12 22L22 17" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                <path d="M2 12L12 17L22 12" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-        </div>
-        <span class="text-white font-black text-sm tracking-tighter hidden sm:block uppercase">Open Higgsfield</span>
-    `;
-    logoContainer.onclick = () => navigate('contents');
+    const logoContainer = h('div', {
+        class: 'cursor-pointer hover:scale-110 transition-transform flex items-center gap-3',
+        onclick: () => navigate('contents'),
+        'data-tooltip': 'Go to Hub'
+    }, 
+        h('div', { class: 'w-8 h-8 bg-white rounded-lg flex items-center justify-center p-1.5 shadow-lg' }, 
+            h('svg', { width: 24, height: 24, viewBox: '0 0 24 24', fill: 'none', xmlns: 'http://www.w3.org/2000/svg' }, 
+                h('path', { d: 'M12 2L2 7L12 12L22 7L12 2Z', fill: 'black' }),
+                h('path', { d: 'M2 17L12 22L22 17', stroke: 'black', 'stroke-width': 2, 'stroke-linecap': 'round', 'stroke-linejoin': 'round' }),
+                h('path', { d: 'M2 12L12 17L22 12', stroke: 'black', 'stroke-width': 2, 'stroke-linecap': 'round', 'stroke-linejoin': 'round' })
+            )
+        ),
+        h('span', { class: 'text-white font-black text-sm tracking-tighter hidden sm:block uppercase' }, 'Open Higgsfield')
+    );
 
     const menu = document.createElement('nav');
     menu.className = 'hidden lg:flex items-center gap-4 text-[13px] font-bold text-secondary';
@@ -47,10 +48,11 @@ export function Header(navigate) {
             openDropdown = null;
         }
     };
-    // Close on Escape
+    // Close on Escape & Global event
     window.addEventListener('keydown', (e) => {
         if (e.key === 'Escape') closeDropdown();
     });
+    window.addEventListener('close-all-overlays', closeDropdown);
     document.addEventListener('click', (e) => {
         // Close when clicking outside
         if (openDropdown && !openDropdown.wrapper.contains(e.target)) {
@@ -124,8 +126,7 @@ export function Header(navigate) {
             const existingDot = wrapper.querySelector('.active-dot');
             if (existingDot) existingDot.remove();
             if (isActive) {
-                const dot = document.createElement('div');
-                dot.className = 'active-dot absolute -bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 bg-primary rounded-full';
+                const dot = h('div', { class: 'active-dot absolute -bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 bg-primary rounded-full shadow-glow-sm' });
                 wrapper.appendChild(dot);
             }
         };
@@ -353,21 +354,19 @@ export function Header(navigate) {
     const rightPart = document.createElement('div');
     rightPart.className = 'flex items-center gap-2 md:gap-4';
 
-    const keyBtn = document.createElement('button');
-    keyBtn.className = 'p-2 text-secondary hover:text-white transition-colors flex items-center gap-2 bg-white/5 md:bg-transparent rounded-lg md:rounded-none';
-    keyBtn.title = 'Update API Key';
-    keyBtn.innerHTML = `
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-            <path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3m-3-3l-2.25-2.25"/>
-        </svg>
-        <span class="text-[10px] font-bold uppercase tracking-tight hidden md:block">API Key</span>
-    `;
-    keyBtn.onclick = async () => {
-        const { AuthModal } = await import('./AuthModal.js');
-        AuthModal(() => {
-            console.log('API Key updated successfully');
-        });
-    };
+    const keyBtn = h('button', {
+        class: 'p-2 text-secondary hover:text-white transition-colors flex items-center gap-2 bg-white/5 md:bg-transparent rounded-lg md:rounded-none',
+        'data-tooltip': 'Manage API Key',
+        onclick: async () => {
+            const { AuthModal } = await import('./AuthModal.js');
+            AuthModal(() => { console.log('API Key updated successfully'); });
+        }
+    }, 
+        h('svg', { width: 18, height: 18, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', 'stroke-width': 2.5 }, 
+            h('path', { d: 'M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3m-3-3l-2.25-2.25' })
+        ),
+        h('span', { class: 'text-[10px] font-bold uppercase tracking-tight hidden md:block' }, 'API Key')
+    );
 
     // Mobile Hamburger
     const hamburger = document.createElement('button');
@@ -428,6 +427,12 @@ export function Header(navigate) {
 
     header.appendChild(navBar);
     header.appendChild(mobileMenu);
+
+    // Global Overlay Close
+    window.addEventListener('close-all-overlays', () => {
+        closeMobileMenu();
+        closeDropdown();
+    });
 
     return header;
 }

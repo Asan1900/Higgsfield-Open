@@ -44,6 +44,14 @@ export function ImageStudio() {
     let selectedAr = '1:1';
     let dropdownOpen = null;
 
+    // Recently Used Models Logic
+    const getRecentModels = () => JSON.parse(localStorage.getItem('recent_models') || '[]');
+    const saveRecentModel = (modelId) => {
+        let recent = getRecentModels();
+        recent = [modelId, ...recent.filter(id => id !== modelId)].slice(0, 5);
+        localStorage.setItem('recent_models', JSON.stringify(recent));
+    };
+
     // Helper: Get valid resolutions/quality options for a model
     const getResolutionsForModel = (modelId) => {
         const model = t2iModels.find(m => m.id === modelId);
@@ -144,9 +152,9 @@ export function ImageStudio() {
     topRow.appendChild(promptInputContainer);
 
     const surpriseBtn = document.createElement('button');
-    surpriseBtn.className = 'text-muted hover:text-white transition-all flex items-center justify-center w-8 h-8 rounded-lg hover:bg-white/10 shrink-0';
+    surpriseBtn.className = 'text-muted hover:text-white transition-all flex items-center justify-center w-10 h-10 rounded-xl hover:bg-white/10 shrink-0';
     surpriseBtn.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87L18.18 22 12 18.27 5.82 22 7 14.14l-5-4.87 6.91-1.01L12 2z"/></svg>`;
-    surpriseBtn.title = 'Surprise Me';
+    surpriseBtn.dataset.tooltip = 'Surprise Me';
     surpriseBtn.onclick = () => {
         const randomPrompt = SAMPLE_PROMPTS[Math.floor(Math.random() * SAMPLE_PROMPTS.length)];
         textarea.value = randomPrompt;
@@ -203,7 +211,7 @@ export function ImageStudio() {
     const generateBtn = document.createElement('button');
     generateBtn.className = 'px-6 md:px-8 py-2.5 md:py-3 rounded-xl md:rounded-2xl font-black text-sm md:text-base transition-all flex items-center justify-center gap-2.5 w-full sm:w-auto shadow-[0_10px_40px_rgba(0,0,0,0.35)] bg-gradient-to-r from-primary via-amber-300 to-lime-300 text-black hover:scale-105 active:scale-95 hover:shadow-[0_15px_45px_rgba(0,0,0,0.45)]';
     generateBtn.innerHTML = `Generate ✨`;
-    generateBtn.title = 'Generate image (Ctrl+Enter)';
+    generateBtn.dataset.tooltip = 'Generate image (Ctrl+Enter)';
 
     // Focus effects
     textarea.addEventListener('focus', () => {
@@ -267,12 +275,14 @@ export function ImageStudio() {
             dropdown.innerHTML = `
                 <div class="flex flex-col h-full max-h-[70vh]">
                     <div class="px-2 pb-3 mb-2 border-b border-white/5 shrink-0">
-                         <div class="flex items-center gap-3 bg-white/5 rounded-xl px-4 py-2.5 border border-white/5 focus-within:border-primary/50 transition-colors">
+                         <div class="flex items-center gap-3 bg-white/5 rounded-xl px-4 py-2.5 border border-white/5 focus-within:border-primary/50 transition-colors relative group/search">
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" class="text-muted"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
                             <input type="text" id="model-search" placeholder="Search models..." class="bg-transparent border-none text-xs text-white focus:ring-0 w-full p-0 outline-none">
+                            <button id="clear-model-search" class="absolute right-3 top-1/2 -translate-y-1/2 text-muted hover:text-white opacity-0 group-focus-within/search:opacity-100 transition-opacity">
+                                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M18 6L6 18M6 6l12 12"/></svg>
+                            </button>
                         </div>
                     </div>
-                    <div class="text-[10px] font-bold text-secondary uppercase tracking-widest px-3 py-2 shrink-0">Available models</div>
                     <div id="model-list-container" class="flex flex-col gap-1.5 overflow-y-auto custom-scrollbar pr-1 pb-2"></div>
                 </div>
             `;
@@ -281,32 +291,61 @@ export function ImageStudio() {
             const renderModels = (filter = '') => {
                 list.innerHTML = '';
                 const filtered = t2iModels.filter(m => m.name.toLowerCase().includes(filter.toLowerCase()) || m.id.toLowerCase().includes(filter.toLowerCase()));
+ 
+                if (filtered.length === 0) {
+                    list.innerHTML = `
+                        <div class="flex flex-col items-center justify-center py-10 px-4 text-center">
+                            <div class="text-3xl mb-2 opacity-20">🔍</div>
+                            <p class="text-[10px] font-bold text-muted uppercase tracking-widest">No models found</p>
+                        </div>
+                    `;
+                    return;
+                }
 
                 filtered.forEach(m => {
-                    const el = document.createElement('div');
-                    el.className = `flex items-center justify-between p-3.5 hover:bg-white/5 rounded-2xl cursor-pointer transition-all border border-transparent hover:border-white/5 ${selectedModel === m.id ? 'bg-white/5 border-white/5' : ''}`;
-                    el.innerHTML = `
-                        <div class="flex items-center gap-3.5">
-                             <div class="w-10 h-10 ${m.id.includes('flux') ? 'bg-blue-500/10 text-blue-400' : 'bg-primary/10 text-primary'} border border-white/5 rounded-xl flex items-center justify-center font-black text-sm shadow-inner uppercase">${m.name.charAt(0)}</div>
-                             <div class="flex flex-col gap-0.5">
-                                <span class="text-xs font-bold text-white tracking-tight">${m.name}</span>
-                             </div>
-                        </div>
-                        ${selectedModel === m.id ? '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#d9ff00" stroke-width="4"><polyline points="20 6 9 17 4 12"/></svg>' : ''}
-                    `;
-                    el.onclick = (e) => {
+                    createModelItem(m);
+                });
+            };
+
+            const createModelItem = (m) => {
+                const el = h('div', {
+                    class: `flex items-center justify-between p-3.5 hover:bg-white/5 rounded-2xl cursor-pointer transition-all border border-transparent hover:border-white/5 ${selectedModel === m.id ? 'bg-white/5 border-white/5' : ''}`,
+                    onclick: (e) => {
                         e.stopPropagation();
                         selectModel(m);
                         closeDropdown();
-                    };
-                    list.appendChild(el);
-                });
+                    }
+                }, h('div', { class: 'flex items-center gap-3.5' }, 
+                        h('div', { 
+                            class: `w-10 h-10 ${m.id.includes('flux') ? 'bg-blue-500/10 text-blue-400' : 'bg-primary/10 text-primary'} border border-white/5 rounded-xl flex items-center justify-center font-black text-sm shadow-inner uppercase`
+                        }, m.name.charAt(0)),
+                        h('div', { class: 'flex flex-col gap-0.5' }, 
+                            h('span', { class: 'text-xs font-bold text-white tracking-tight' }, m.name)
+                        )
+                    ),
+                    selectedModel === m.id ? h('svg', { width: 16, height: 16, viewBox: '0 0 24 24', fill: 'none', stroke: '#d9ff00', 'stroke-width': 4 }, h('polyline', { points: '20 6 9 17 4 12' })) : null
+                );
+                list.appendChild(el);
             };
+
             renderModels();
 
             const searchInput = dropdown.querySelector('#model-search');
             searchInput.onclick = (e) => e.stopPropagation();
-            searchInput.oninput = (e) => renderModels(e.target.value);
+            searchInput.oninput = (e) => {
+                renderModels(e.target.value);
+                const clearBtn = dropdown.querySelector('#clear-model-search');
+                if (clearBtn) clearBtn.style.opacity = e.target.value ? '1' : '0';
+            };
+
+            const clearBtn = dropdown.querySelector('#clear-model-search');
+            clearBtn.onclick = (e) => {
+                e.stopPropagation();
+                searchInput.value = '';
+                renderModels('');
+                clearBtn.style.opacity = '0';
+                searchInput.focus();
+            };
 
         } else if (type === 'ar') {
             dropdown.classList.add('max-w-[240px]');
@@ -364,6 +403,7 @@ export function ImageStudio() {
         selectedModel = m.id;
         selectedModelName = m.name;
         document.getElementById('model-btn-label').textContent = selectedModelName;
+        saveRecentModel(m.id);
 
         const availableArs = getAspectRatiosForModel(selectedModel);
         selectedAr = availableArs[0];
@@ -461,7 +501,7 @@ export function ImageStudio() {
             <path d="${isHistoryCollapsed ? 'M15 18l-6-6 6-6' : 'M9 18l6-6-6-6'}"/>
         </svg>
     `;
-    toggleSidebarBtn.title = 'Toggle History Sidebar';
+    toggleSidebarBtn.dataset.tooltip = 'Toggle History Sidebar (H)';
     toggleSidebarBtn.onclick = () => {
         isHistoryCollapsed = !isHistoryCollapsed;
         container.classList.toggle('sidebar-collapsed', isHistoryCollapsed);
@@ -498,7 +538,7 @@ export function ImageStudio() {
     const copyPromptBtn = document.createElement('button');
     copyPromptBtn.className = 'bg-white/10 hover:bg-white/20 px-6 py-2.5 rounded-2xl text-xs font-bold transition-all border border-white/5 backdrop-blur-lg text-white';
     copyPromptBtn.textContent = '📋 Prompt';
-    copyPromptBtn.title = 'Copy generation prompt';
+    copyPromptBtn.dataset.tooltip = 'Copy generation prompt';
     copyPromptBtn.onclick = async () => {
         const current = resultImg.src;
         const entry = generationHistory.find(e => e.url === current);
@@ -521,7 +561,7 @@ export function ImageStudio() {
     const copyLinkBtn = document.createElement('button');
     copyLinkBtn.className = 'bg-white/10 hover:bg-white/20 px-6 py-2.5 rounded-2xl text-xs font-bold transition-all border border-white/5 backdrop-blur-lg text-white';
     copyLinkBtn.textContent = '🔗 Link';
-    copyLinkBtn.title = 'Copy image URL';
+    copyLinkBtn.dataset.tooltip = 'Copy image URL';
     copyLinkBtn.onclick = async () => {
         const current = resultImg.src;
         if (current) {

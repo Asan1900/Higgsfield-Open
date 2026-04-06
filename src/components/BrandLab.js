@@ -1,4 +1,5 @@
 import { muapi } from '../lib/muapi.js';
+import { h } from '../lib/domUtils.js';
 
 /**
  * BrandLab — Typography & Logo Design Studio.
@@ -51,11 +52,7 @@ export function BrandLab() {
         <!-- Style Presets Grid -->
         <div class="p-6 border-b border-white/5 space-y-3">
           <label class="text-[10px] font-black text-muted uppercase tracking-[0.3em]">Style Preset</label>
-          <div id="brand-style-grid" class="grid grid-cols-2 gap-2">
-            ${stylePresets.map((s, i) => `
-              <button data-style="${s.id}" class="brand-style-btn px-3 py-2.5 rounded-xl text-[11px] font-bold border text-left transition-all ${i === 0 ? 'bg-amber-500/20 border-amber-400/40 text-amber-400' : 'bg-white/5 border-white/10 text-secondary hover:bg-white/10'}">${s.label}</button>
-            `).join('')}
-          </div>
+          <div id="brand-style-grid" class="grid grid-cols-2 gap-2"></div>
         </div>
 
         <!-- Render Speed & Style -->
@@ -117,9 +114,20 @@ export function BrandLab() {
         const resultImg = container.querySelector('#brand-result-img');
         const downloadBtn = container.querySelector('#brand-download-btn');
         const variationBtn = container.querySelector('#brand-variation-btn');
-        const styleBtns = container.querySelectorAll('.brand-style-btn');
-        const qualityBtns = container.querySelectorAll('.brand-quality-btn');
         const arBtns = container.querySelectorAll('.brand-ar-btn');
+
+        // Render Style Grid using 'h' helper
+        const styleGrid = container.querySelector('#brand-style-grid');
+        stylePresets.forEach((s, i) => {
+            const btn = h('button', {
+                class: `brand-style-btn px-3 py-2.5 rounded-xl text-[11px] font-bold border text-left transition-all ${i === 0 ? 'bg-amber-500/20 border-amber-400/40 text-amber-400' : 'bg-white/5 border-white/10 text-secondary hover:bg-white/10'}`,
+                dataset: { style: s.id },
+                'data-tooltip': `Apply ${s.label} style`
+            }, s.label);
+            styleGrid.appendChild(btn);
+        });
+
+        const styleBtns = container.querySelectorAll('.brand-style-btn');
 
         let selectedStyle = stylePresets[0];
         let selectedQuality = 'Balanced';

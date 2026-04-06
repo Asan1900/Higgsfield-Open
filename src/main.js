@@ -3,6 +3,10 @@ import { Header } from './components/Header.js';
 import { ImageStudio } from './components/ImageStudio.js';
 import { ComingSoon } from './components/ComingSoon.js';
 import { eventBus } from './lib/EventBus.js';
+import { Tooltip } from './components/Tooltip.js';
+
+// Init Tooltips
+Tooltip.init();
 
 const app = document.querySelector('#app');
 let contentArea;
@@ -182,4 +186,29 @@ window.addEventListener('navigate', (e) => {
 // EventBus-based cross-studio navigation
 eventBus.on('studio:navigate', ({ page, ...context }) => {
   navigate(page, context);
+});
+
+// Global Keyboard Shortcuts
+window.addEventListener('keydown', (e) => {
+    // CMD/CTRL + K to search models
+    if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault();
+        const searchInput = document.getElementById('model-search');
+        if (searchInput) {
+            searchInput.focus();
+        } else {
+            // If not in a studio with model search, navigate to image studio
+            navigate('image');
+            // Wait for navigation and then focus
+            setTimeout(() => {
+                const search = document.getElementById('model-search');
+                if (search) search.focus();
+            }, 600);
+        }
+    }
+
+    // Escape to close modals/dropdowns (some already handled in components, but good to have a backup)
+    if (e.key === 'Escape') {
+        window.dispatchEvent(new CustomEvent('close-all-overlays'));
+    }
 });
